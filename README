@@ -5,3 +5,22 @@ $Id$
 
 pystatgrab contains python bindings for libstatgrab. For information
 on libstatgrab see the libstatgrab website given above.
+
+There is currently very little documentation for pystatgrab.
+Installation is a normal distutils setup:
+
+./setup.py install
+
+The functions available through pystatgrab directly match those of
+the libstatgrab functions. Documentation on those functions can be
+found in the libstatgrab package, or on the libstatgrab website.
+
+The return types of the functions are dictionaries, sometimes
+contained within an array if more than one item is being returned.
+These map pretty much directly on to the C structures returned by
+libstatgrab.
+
+Please let us know if you have any problems - support@i-scream.org.
+
+If you find a bug, help us to fix it by sending details to
+bugs@i-scream.org. If you have a patch, please send it too.
