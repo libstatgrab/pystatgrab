@@ -71,7 +71,7 @@ setup(	name = "pystatgrab",
 	description = "Python bindings for libstatgrab",
 	author = "i-scream",
 	author_email = "dev@i-scream.org",
-	url = "http://www.i-scream.org/libstatgrab/",
+	url = "http://www.i-scream.org/pystatgrab/",
 	license = "GNU GPL v2 or later",
 	ext_modules=[Extension(
 		"_statgrab",
