@@ -21,10 +21,50 @@
 #
 
 ctypedef long time_t
+ctypedef int pid_t
+ctypedef int uid_t
+ctypedef int gid_t
 
 cdef extern from "statgrab.h":
     cdef extern int sg_init()
     cdef extern int sg_drop_privileges()
+
+    ctypedef enum sg_error:
+        SG_ERROR_NONE = 0
+        SG_ERROR_ASPRINTF
+        SG_ERROR_DEVSTAT_GETDEVS
+        SG_ERROR_DEVSTAT_SELECTDEVS
+        SG_ERROR_ENOENT
+        SG_ERROR_GETIFADDRS
+        SG_ERROR_GETMNTINFO
+        SG_ERROR_GETPAGESIZE
+        SG_ERROR_KSTAT_DATA_LOOKUP
+        SG_ERROR_KSTAT_LOOKUP
+        SG_ERROR_KSTAT_OPEN
+        SG_ERROR_KSTAT_READ
+        SG_ERROR_KVM_GETSWAPINFO
+        SG_ERROR_KVM_OPENFILES
+        SG_ERROR_MALLOC
+        SG_ERROR_OPEN
+        SG_ERROR_OPENDIR
+        SG_ERROR_PARSE
+        SG_ERROR_SETEGID
+        SG_ERROR_SETEUID
+        SG_ERROR_SETMNTENT
+        SG_ERROR_SOCKET
+        SG_ERROR_SWAPCTL
+        SG_ERROR_SYSCONF
+        SG_ERROR_SYSCTL
+        SG_ERROR_SYSCTLBYNAME
+        SG_ERROR_SYSCTLNAMETOMIB
+        SG_ERROR_UNAME
+        SG_ERROR_UNSUPPORTED
+        SG_ERROR_XSW_VER_MISMATCH
+
+    cdef extern void sg_set_error(sg_error code, char *arg)
+    cdef extern sg_error sg_get_error()
+    cdef extern char *sg_get_error_arg()
+    cdef extern char *sg_str_error(sg_error code)
 
     ctypedef struct sg_host_info:
         char *os_name
@@ -145,6 +185,32 @@ cdef extern from "statgrab.h":
     cdef extern sg_page_stats *sg_get_page_stats()
     cdef extern sg_page_stats *sg_get_page_stats_diff()
 
+    ctypedef enum sg_process_state:
+        SG_PROCESS_STATE_RUNNING
+        SG_PROCESS_STATE_SLEEPING
+        SG_PROCESS_STATE_STOPPED
+        SG_PROCESS_STATE_ZOMBIE
+        SG_PROCESS_STATE_UNKNOWN
+
+    ctypedef struct sg_process_stats:
+        char *process_name
+        char *proctitle
+        pid_t pid
+        pid_t parent
+        pid_t pgid
+        uid_t uid
+        uid_t euid
+        gid_t gid
+        gid_t egid
+        unsigned long long proc_size
+        unsigned long long proc_resident
+        time_t time_spent
+        double cpu_percent
+        int nice
+        sg_process_state state
+
+    cdef extern sg_process_stats *sg_get_process_stats(int *entries)
+
     ctypedef struct sg_process_count:
         int total
         int running
@@ -155,9 +221,46 @@ cdef extern from "statgrab.h":
     cdef extern sg_process_count *sg_get_process_count()
 
 
+py_SG_ERROR_NONE = SG_ERROR_NONE
+py_SG_ERROR_ASPRINTF = SG_ERROR_ASPRINTF
+py_SG_ERROR_DEVSTAT_GETDEVS = SG_ERROR_DEVSTAT_GETDEVS
+py_SG_ERROR_DEVSTAT_SELECTDEVS = SG_ERROR_DEVSTAT_SELECTDEVS
+py_SG_ERROR_ENOENT = SG_ERROR_ENOENT
+py_SG_ERROR_GETIFADDRS = SG_ERROR_GETIFADDRS
+py_SG_ERROR_GETMNTINFO = SG_ERROR_GETMNTINFO
+py_SG_ERROR_GETPAGESIZE = SG_ERROR_GETPAGESIZE
+py_SG_ERROR_KSTAT_DATA_LOOKUP = SG_ERROR_KSTAT_DATA_LOOKUP
+py_SG_ERROR_KSTAT_LOOKUP = SG_ERROR_KSTAT_LOOKUP
+py_SG_ERROR_KSTAT_OPEN = SG_ERROR_KSTAT_OPEN
+py_SG_ERROR_KSTAT_READ = SG_ERROR_KSTAT_READ
+py_SG_ERROR_KVM_GETSWAPINFO = SG_ERROR_KVM_GETSWAPINFO
+py_SG_ERROR_KVM_OPENFILES = SG_ERROR_KVM_OPENFILES
+py_SG_ERROR_MALLOC = SG_ERROR_MALLOC
+py_SG_ERROR_OPEN = SG_ERROR_OPEN
+py_SG_ERROR_OPENDIR = SG_ERROR_OPENDIR
+py_SG_ERROR_PARSE = SG_ERROR_PARSE
+py_SG_ERROR_SETEGID = SG_ERROR_SETEGID
+py_SG_ERROR_SETEUID = SG_ERROR_SETEUID
+py_SG_ERROR_SETMNTENT = SG_ERROR_SETMNTENT
+py_SG_ERROR_SOCKET = SG_ERROR_SOCKET
+py_SG_ERROR_SWAPCTL = SG_ERROR_SWAPCTL
+py_SG_ERROR_SYSCONF = SG_ERROR_SYSCONF
+py_SG_ERROR_SYSCTL = SG_ERROR_SYSCTL
+py_SG_ERROR_SYSCTLBYNAME = SG_ERROR_SYSCTLBYNAME
+py_SG_ERROR_SYSCTLNAMETOMIB = SG_ERROR_SYSCTLNAMETOMIB
+py_SG_ERROR_UNAME = SG_ERROR_UNAME
+py_SG_ERROR_UNSUPPORTED = SG_ERROR_UNSUPPORTED
+py_SG_ERROR_XSW_VER_MISMATCH = SG_ERROR_XSW_VER_MISMATCH
+
 py_SG_IFACE_DUPLEX_FULL = SG_IFACE_DUPLEX_FULL
 py_SG_IFACE_DUPLEX_HALF = SG_IFACE_DUPLEX_HALF
 py_SG_IFACE_DUPLEX_UNKNOWN = SG_IFACE_DUPLEX_UNKNOWN
+
+py_SG_PROCESS_STATE_RUNNING = SG_PROCESS_STATE_RUNNING
+py_SG_PROCESS_STATE_SLEEPING = SG_PROCESS_STATE_SLEEPING
+py_SG_PROCESS_STATE_STOPPED = SG_PROCESS_STATE_STOPPED
+py_SG_PROCESS_STATE_ZOMBIE = SG_PROCESS_STATE_ZOMBIE
+py_SG_PROCESS_STATE_UNKNOWN = SG_PROCESS_STATE_UNKNOWN
 
 
 class Result:
@@ -188,6 +291,22 @@ def py_sg_drop_privileges():
         return True
     else:
         return False
+
+def py_sg_set_error(code, arg):
+    sg_set_error(code, arg)
+
+def py_sg_get_error():
+    cdef sg_error s
+    s = sg_get_error()
+    return s
+
+def py_sg_get_error_arg():
+    s = sg_get_error_arg()
+    return s
+
+def py_sg_str_error(code):
+    s = sg_str_error(code)
+    return s
 
 def py_sg_get_host_info():
     cdef sg_host_info *s
@@ -446,6 +565,39 @@ def py_sg_get_page_stats_diff():
          'pages_pageout': s.pages_pageout,
         }
     )
+
+def py_sg_get_process_stats():
+    cdef sg_process_stats *s
+    cdef int entries
+    s = sg_get_process_stats(&entries)
+    if s == NULL:
+        raise StatgrabException, 'sg_get_process_stats() returned NULL'
+    list = []
+    for i from 0 <= i < entries:
+        if s.process_name == NULL:
+            s.process_name = ''
+        if s.proctitle == NULL:
+            s.proctitle = ''
+        list.append(Result(
+            {'process_name': s.process_name,
+             'proctitle' : s.proctitle,
+             'pid' : s.pid,
+             'parent' : s.parent,
+             'pgid' : s.pgid,
+             'uid' : s.uid,
+             'euid' : s.euid,
+             'gid' : s.gid,
+             'egid' : s.egid,
+             'proc_size' : s.proc_size,
+             'proc_resident' : s.proc_resident,
+             'time_spent' : s.time_spent,
+             'cpu_percent' : s.cpu_percent,
+             'nice' : s.nice,
+             'state' : s.state,
+            }
+        ))
+        s = s + 1
+    return list
 
 def py_sg_get_process_count():
     cdef sg_process_count *s
