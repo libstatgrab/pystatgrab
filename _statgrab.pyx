@@ -23,6 +23,19 @@
 ctypedef long time_t
 
 cdef extern from "statgrab.h":
+    cdef extern int sg_init()
+    cdef extern int sg_drop_privileges()
+
+    ctypedef struct sg_host_info:
+        char *os_name
+        char *os_release
+        char *os_version
+        char *platform
+        char *hostname
+        time_t uptime
+
+    cdef extern sg_host_info *sg_get_host_info()
+
     ctypedef struct sg_cpu_stats:
         long long user
         long long kernel
@@ -33,6 +46,9 @@ cdef extern from "statgrab.h":
         long long total
         time_t systime
 
+    cdef extern sg_cpu_stats *sg_get_cpu_stats()
+    cdef extern sg_cpu_stats *sg_get_cpu_stats_diff()
+
     ctypedef struct sg_cpu_percents:
         float user
         float kernel
@@ -42,33 +58,35 @@ cdef extern from "statgrab.h":
         float nice
         time_t time_taken
 
+    cdef extern sg_cpu_percents *sg_get_cpu_percents()
+
     ctypedef struct sg_mem_stats:
         long long total
         long long free
         long long used
         long long cache
 
+    cdef extern sg_mem_stats *sg_get_mem_stats()
+
     ctypedef struct sg_load_stats:
         double min1
         double min5
         double min15
 
+    cdef extern sg_load_stats *sg_get_load_stats()
+
     ctypedef struct sg_user_stats:
         char *name_list
         int num_entries
+
+    cdef extern sg_user_stats *sg_get_user_stats()
 
     ctypedef struct sg_swap_stats:
         long long total
         long long used
         long long free
 
-    ctypedef struct sg_host_info:
-        char *os_name
-        char *os_release
-        char *os_version
-        char *platform
-        char *hostname
-        time_t uptime
+    cdef extern sg_swap_stats *sg_get_swap_stats()
 
     ctypedef struct sg_fs_stats:
         char *device_name
@@ -81,18 +99,16 @@ cdef extern from "statgrab.h":
         long long used_inodes
         long long free_inodes
 
+    cdef extern sg_fs_stats *sg_get_fs_stats(int *entries)
+
     ctypedef struct sg_disk_io_stats:
         char *disk_name
         long long read_bytes
         long long write_bytes
         time_t systime
 
-    ctypedef struct sg_process_count:
-        int total
-        int running
-        int sleeping
-        int stopped
-        int zombie
+    cdef extern sg_disk_io_stats *sg_get_disk_io_stats(int *entries)
+    cdef extern sg_disk_io_stats *sg_get_disk_io_stats_diff(int *entries)
 
     ctypedef struct sg_network_io_stats:
         char *interface_name
@@ -105,6 +121,9 @@ cdef extern from "statgrab.h":
         long long collisions
         time_t systime
 
+    cdef extern sg_network_io_stats *sg_get_network_io_stats(int *entries)
+    cdef extern sg_network_io_stats *sg_get_network_io_stats_diff(int *entries)
+
     ctypedef enum sg_iface_duplex:
         SG_IFACE_DUPLEX_FULL
         SG_IFACE_DUPLEX_HALF
@@ -116,30 +135,24 @@ cdef extern from "statgrab.h":
         sg_iface_duplex dup
         int up
 
+    cdef extern sg_network_iface_stats *sg_get_network_iface_stats(int *entries)
+
     ctypedef struct sg_page_stats:
         long long pages_pagein
         long long pages_pageout
         time_t systime
 
-    cdef extern sg_cpu_stats *sg_get_cpu_stats()
-    cdef extern sg_cpu_stats *sg_get_cpu_stats_diff()
-    cdef extern sg_cpu_percents *sg_get_cpu_percents()
-    cdef extern sg_mem_stats *sg_get_mem_stats()
-    cdef extern sg_load_stats *sg_get_load_stats()
-    cdef extern sg_user_stats *sg_get_user_stats()
-    cdef extern sg_swap_stats *sg_get_swap_stats()
-    cdef extern sg_host_info *sg_get_host_info()
-    cdef extern sg_fs_stats *sg_get_fs_stats(int *entries)
-    cdef extern sg_disk_io_stats *sg_get_disk_io_stats(int *entries)
-    cdef extern sg_disk_io_stats *sg_get_disk_io_stats_diff(int *entries)
-    cdef extern sg_process_count *sg_get_process_count()
-    cdef extern sg_network_io_stats *sg_get_network_io_stats(int *entries)
-    cdef extern sg_network_io_stats *sg_get_network_io_stats_diff(int *entries)
-    cdef extern sg_network_iface_stats *sg_get_network_iface_stats(int *entries)
     cdef extern sg_page_stats *sg_get_page_stats()
     cdef extern sg_page_stats *sg_get_page_stats_diff()
-    cdef extern int sg_init()
-    cdef extern int sg_drop_privileges()
+
+    ctypedef struct sg_process_count:
+        int total
+        int running
+        int sleeping
+        int stopped
+        int zombie
+
+    cdef extern sg_process_count *sg_get_process_count()
 
 
 py_SG_IFACE_DUPLEX_FULL = SG_IFACE_DUPLEX_FULL
@@ -163,6 +176,33 @@ class StatgrabException(Exception):
     def __str__(self):
         return repr(self.value)
 
+
+def py_sg_init():
+    if sg_init() == 0:
+        return True
+    else:
+        return False
+
+def py_sg_drop_privileges():
+    if sg_drop_privileges() == 0:
+        return True
+    else:
+        return False
+
+def py_sg_get_host_info():
+    cdef sg_host_info *s
+    s = sg_get_host_info()
+    if s == NULL:
+        raise StatgrabException, 'sg_get_host_info() returned NULL'
+    return Result(
+        {'os_name': s.os_name,
+         'os_release': s.os_release,
+         'os_version': s.os_version,
+         'platform': s.platform,
+         'hostname': s.hostname,
+         'uptime': s.uptime,
+        }
+    )
 
 def py_sg_get_cpu_stats():
     cdef sg_cpu_stats *s
@@ -262,21 +302,6 @@ def py_sg_get_swap_stats():
         }
     )
 
-def py_sg_get_host_info():
-    cdef sg_host_info *s
-    s = sg_get_host_info()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_host_info() returned NULL'
-    return Result(
-        {'os_name': s.os_name,
-         'os_release': s.os_release,
-         'os_version': s.os_version,
-         'platform': s.platform,
-         'hostname': s.hostname,
-         'uptime': s.uptime,
-        }
-    )
-
 def py_sg_get_fs_stats():
     cdef sg_fs_stats *s
     cdef int entries
@@ -335,20 +360,6 @@ def py_sg_get_disk_io_stats_diff():
         ))
         s = s + 1
     return list
-
-def py_sg_get_process_count():
-    cdef sg_process_count *s
-    s = sg_get_process_count()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_process_count() returned NULL'
-    return Result(
-        {'total': s.total,
-         'running': s.running,
-         'sleeping': s.sleeping,
-         'stopped': s.stopped,
-         'zombie': s.zombie,
-        }
-    )
 
 def py_sg_get_network_io_stats():
     cdef sg_network_io_stats *s
@@ -436,14 +447,16 @@ def py_sg_get_page_stats_diff():
         }
     )
 
-def py_sg_init():
-    if sg_init() == 0:
-        return True
-    else:
-        return False
-
-def py_sg_drop_privileges():
-    if sg_drop_privileges() == 0:
-        return True
-    else:
-        return False
+def py_sg_get_process_count():
+    cdef sg_process_count *s
+    s = sg_get_process_count()
+    if s == NULL:
+        raise StatgrabException, 'sg_get_process_count() returned NULL'
+    return Result(
+        {'total': s.total,
+         'running': s.running,
+         'sleeping': s.sleeping,
+         'stopped': s.stopped,
+         'zombie': s.zombie,
+        }
+    )

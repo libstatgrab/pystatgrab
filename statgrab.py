@@ -22,6 +22,12 @@
 
 import _statgrab
 
+def sg_init():
+    return _statgrab.py_sg_init()
+def sg_drop_privileges():
+    return _statgrab.py_sg_drop_privileges()
+def sg_get_host_info():
+    return _statgrab.py_sg_get_host_info()
 def sg_get_cpu_stats():
     return _statgrab.py_sg_get_cpu_stats()
 def sg_get_cpu_stats_diff():
@@ -36,16 +42,12 @@ def sg_get_user_stats():
     return _statgrab.py_sg_get_user_stats()
 def sg_get_swap_stats():
     return _statgrab.py_sg_get_swap_stats()
-def sg_get_host_info():
-    return _statgrab.py_sg_get_host_info()
 def sg_get_fs_stats():
     return _statgrab.py_sg_get_fs_stats()
 def sg_get_disk_io_stats():
     return _statgrab.py_sg_get_disk_io_stats()
 def sg_get_disk_io_stats_diff():
     return _statgrab.py_sg_get_disk_io_stats_diff()
-def sg_get_process_count():
-    return _statgrab.py_sg_get_process_count()
 def sg_get_network_io_stats():
     return _statgrab.py_sg_get_network_io_stats()
 def sg_get_network_io_stats_diff():
@@ -56,10 +58,8 @@ def sg_get_page_stats():
     return _statgrab.py_sg_get_page_stats()
 def sg_get_page_stats_diff():
     return _statgrab.py_sg_get_page_stats_diff()
-def sg_init():
-    return _statgrab.py_sg_init()
-def sg_drop_privileges():
-    return _statgrab.py_sg_drop_privileges()
+def sg_get_process_count():
+    return _statgrab.py_sg_get_process_count()
 
 SG_IFACE_DUPLEX_FULL = _statgrab.py_SG_IFACE_DUPLEX_FULL
 SG_IFACE_DUPLEX_HALF = _statgrab.py_SG_IFACE_DUPLEX_HALF
