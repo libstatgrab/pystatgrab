@@ -23,7 +23,7 @@
 ctypedef long time_t
 
 cdef extern from "statgrab.h":
-    ctypedef struct cpu_states_t:
+    ctypedef struct sg_cpu_stats:
         long long user
         long long kernel
         long long idle
@@ -33,7 +33,7 @@ cdef extern from "statgrab.h":
         long long total
         time_t systime
 
-    ctypedef struct cpu_percent_t:
+    ctypedef struct sg_cpu_percents:
         float user
         float kernel
         float idle
@@ -42,27 +42,27 @@ cdef extern from "statgrab.h":
         float nice
         time_t time_taken
 
-    ctypedef struct mem_stat_t:
+    ctypedef struct sg_mem_stats:
         long long total
         long long free
         long long used
         long long cache
 
-    ctypedef struct load_stat_t:
+    ctypedef struct sg_load_stats:
         double min1
         double min5
         double min15
 
-    ctypedef struct user_stat_t:
+    ctypedef struct sg_user_stats:
         char *name_list
         int num_entries
 
-    ctypedef struct swap_stat_t:
+    ctypedef struct sg_swap_stats:
         long long total
         long long used
         long long free
 
-    ctypedef struct general_stat_t:
+    ctypedef struct sg_host_info:
         char *os_name
         char *os_release
         char *os_version
@@ -70,7 +70,7 @@ cdef extern from "statgrab.h":
         char *hostname
         time_t uptime
 
-    ctypedef struct disk_stat_t:
+    ctypedef struct sg_fs_stats:
         char *device_name
         char *fs_type
         char *mnt_point
@@ -81,20 +81,20 @@ cdef extern from "statgrab.h":
         long long used_inodes
         long long free_inodes
 
-    ctypedef struct diskio_stat_t:
+    ctypedef struct sg_disk_io_stats:
         char *disk_name
         long long read_bytes
         long long write_bytes
         time_t systime
 
-    ctypedef struct process_stat_t:
+    ctypedef struct sg_process_count:
         int total
         int running
         int sleeping
         int stopped
         int zombie
 
-    ctypedef struct network_stat_t:
+    ctypedef struct sg_network_io_stats:
         char *interface_name
         long long tx
         long long rx
@@ -105,46 +105,46 @@ cdef extern from "statgrab.h":
         long long collisions
         time_t systime
 
-    ctypedef enum statgrab_duplex:
-        FULL_DUPLEX
-        HALF_DUPLEX
-        UNKNOWN_DUPLEX
+    ctypedef enum sg_iface_duplex:
+        SG_IFACE_DUPLEX_FULL
+        SG_IFACE_DUPLEX_HALF
+        SG_IFACE_DUPLEX_UNKNOWN
 
-    ctypedef struct network_iface_stat_t:
+    ctypedef struct sg_network_iface_stats:
         char *interface_name
         int speed
-        statgrab_duplex dup
+        sg_iface_duplex dup
         int up
 
-    ctypedef struct page_stat_t:
+    ctypedef struct sg_page_stats:
         long long pages_pagein
         long long pages_pageout
         time_t systime
 
-    cdef extern cpu_states_t *get_cpu_totals()
-    cdef extern cpu_states_t *get_cpu_diff()
-    cdef extern cpu_percent_t *cpu_percent_usage()
-    cdef extern mem_stat_t *get_memory_stats()
-    cdef extern load_stat_t *get_load_stats()
-    cdef extern user_stat_t *get_user_stats()
-    cdef extern swap_stat_t *get_swap_stats()
-    cdef extern general_stat_t *get_general_stats()
-    cdef extern disk_stat_t *get_disk_stats(int *entries)
-    cdef extern diskio_stat_t *get_diskio_stats(int *entries)
-    cdef extern diskio_stat_t *get_diskio_stats_diff(int *entries)
-    cdef extern process_stat_t *get_process_stats()
-    cdef extern network_stat_t *get_network_stats(int *entries)
-    cdef extern network_stat_t *get_network_stats_diff(int *entries)
-    cdef extern network_iface_stat_t *get_network_iface_stats(int *entries)
-    cdef extern page_stat_t *get_page_stats()
-    cdef extern page_stat_t *get_page_stats_diff()
-    cdef extern int statgrab_init()
-    cdef extern int statgrab_drop_privileges()
+    cdef extern sg_cpu_stats *sg_get_cpu_stats()
+    cdef extern sg_cpu_stats *sg_get_cpu_stats_diff()
+    cdef extern sg_cpu_percents *sg_get_cpu_percents()
+    cdef extern sg_mem_stats *sg_get_mem_stats()
+    cdef extern sg_load_stats *sg_get_load_stats()
+    cdef extern sg_user_stats *sg_get_user_stats()
+    cdef extern sg_swap_stats *sg_get_swap_stats()
+    cdef extern sg_host_info *sg_get_host_info()
+    cdef extern sg_fs_stats *sg_get_fs_stats(int *entries)
+    cdef extern sg_disk_io_stats *sg_get_disk_io_stats(int *entries)
+    cdef extern sg_disk_io_stats *sg_get_disk_io_stats_diff(int *entries)
+    cdef extern sg_process_count *sg_get_process_count()
+    cdef extern sg_network_io_stats *sg_get_network_io_stats(int *entries)
+    cdef extern sg_network_io_stats *sg_get_network_io_stats_diff(int *entries)
+    cdef extern sg_network_iface_stats *sg_get_network_iface_stats(int *entries)
+    cdef extern sg_page_stats *sg_get_page_stats()
+    cdef extern sg_page_stats *sg_get_page_stats_diff()
+    cdef extern int sg_init()
+    cdef extern int sg_drop_privileges()
 
 
-py_FULL_DUPLEX = FULL_DUPLEX
-py_HALF_DUPLEX = HALF_DUPLEX
-py_UNKNOWN_DUPLEX = UNKNOWN_DUPLEX
+py_SG_IFACE_DUPLEX_FULL = SG_IFACE_DUPLEX_FULL
+py_SG_IFACE_DUPLEX_HALF = SG_IFACE_DUPLEX_HALF
+py_SG_IFACE_DUPLEX_UNKNOWN = SG_IFACE_DUPLEX_UNKNOWN
 
 
 class Result:
@@ -164,11 +164,11 @@ class StatgrabException(Exception):
         return repr(self.value)
 
 
-def py_get_cpu_totals():
-    cdef cpu_states_t *s
-    s = get_cpu_totals()
+def py_sg_get_cpu_stats():
+    cdef sg_cpu_stats *s
+    s = sg_get_cpu_stats()
     if s == NULL:
-        raise StatgrabException, 'get_cpu_totals() returned NULL'
+        raise StatgrabException, 'sg_get_cpu_stats() returned NULL'
     return Result(
         {'user': s.user,
          'kernel': s.kernel,
@@ -181,11 +181,11 @@ def py_get_cpu_totals():
         }
     )
 
-def py_get_cpu_diff():
-    cdef cpu_states_t *s
-    s = get_cpu_diff()
+def py_sg_get_cpu_stats_diff():
+    cdef sg_cpu_stats *s
+    s = sg_get_cpu_stats_diff()
     if s == NULL:
-        raise StatgrabException, 'get_cpu_diff() returned NULL'
+        raise StatgrabException, 'sg_get_cpu_stats_diff() returned NULL'
     return Result(
         {'user': s.user,
          'kernel': s.kernel,
@@ -198,11 +198,11 @@ def py_get_cpu_diff():
         }
     )
 
-def py_cpu_percent_usage():
-    cdef cpu_percent_t *s
-    s = cpu_percent_usage()
+def py_sg_get_cpu_percents():
+    cdef sg_cpu_percents *s
+    s = sg_get_cpu_percents()
     if s == NULL:
-        raise StatgrabException, 'cpu_percent_usage() returned NULL'
+        raise StatgrabException, 'sg_get_cpu_percents() returned NULL'
     return Result(
         {'user': s.user,
          'kernel': s.kernel,
@@ -214,11 +214,11 @@ def py_cpu_percent_usage():
         }
     )
 
-def py_get_memory_stats():
-    cdef mem_stat_t *s
-    s = get_memory_stats()
+def py_sg_get_mem_stats():
+    cdef sg_mem_stats *s
+    s = sg_get_mem_stats()
     if s == NULL:
-        raise StatgrabException, 'get_memory_stats() returned NULL'
+        raise StatgrabException, 'sg_get_mem_stats() returned NULL'
     return Result(
         {'total': s.total,
          'used': s.used,
@@ -227,11 +227,11 @@ def py_get_memory_stats():
         }
     )
 
-def py_get_load_stats():
-    cdef load_stat_t *s
-    s = get_load_stats()
+def py_sg_get_load_stats():
+    cdef sg_load_stats *s
+    s = sg_get_load_stats()
     if s == NULL:
-        raise StatgrabException, 'get_load_stats() returned NULL'
+        raise StatgrabException, 'sg_get_load_stats() returned NULL'
     return Result(
         {'min1': s.min1,
          'min5': s.min5,
@@ -239,22 +239,22 @@ def py_get_load_stats():
         }
     )
 
-def py_get_user_stats():
-    cdef user_stat_t *s
-    s = get_user_stats()
+def py_sg_get_user_stats():
+    cdef sg_user_stats *s
+    s = sg_get_user_stats()
     if s == NULL:
-        raise StatgrabException, 'get_user_stats() returned NULL'
+        raise StatgrabException, 'sg_get_user_stats() returned NULL'
     return Result(
         {'name_list': s.name_list,
          'num_entries': s.num_entries,
         }
     )
 
-def py_get_swap_stats():
-    cdef swap_stat_t *s
-    s = get_swap_stats()
+def py_sg_get_swap_stats():
+    cdef sg_swap_stats *s
+    s = sg_get_swap_stats()
     if s == NULL:
-        raise StatgrabException, 'get_swap_stats() returned NULL'
+        raise StatgrabException, 'sg_get_swap_stats() returned NULL'
     return Result(
         {'total': s.total,
          'used': s.used,
@@ -262,11 +262,11 @@ def py_get_swap_stats():
         }
     )
 
-def py_get_general_stats():
-    cdef general_stat_t *s
-    s = get_general_stats()
+def py_sg_get_host_info():
+    cdef sg_host_info *s
+    s = sg_get_host_info()
     if s == NULL:
-        raise StatgrabException, 'get_general_stats() returned NULL'
+        raise StatgrabException, 'sg_get_host_info() returned NULL'
     return Result(
         {'os_name': s.os_name,
          'os_release': s.os_release,
@@ -277,12 +277,12 @@ def py_get_general_stats():
         }
     )
 
-def py_get_disk_stats():
-    cdef disk_stat_t *s
+def py_sg_get_fs_stats():
+    cdef sg_fs_stats *s
     cdef int entries
-    s = get_disk_stats(&entries)
+    s = sg_get_fs_stats(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_disk_stats() returned NULL'
+        raise StatgrabException, 'sg_get_fs_stats() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -300,12 +300,12 @@ def py_get_disk_stats():
         s = s + 1
     return list
 
-def py_get_diskio_stats():
-    cdef diskio_stat_t *s
+def py_sg_get_disk_io_stats():
+    cdef sg_disk_io_stats *s
     cdef int entries
-    s = get_diskio_stats(&entries)
+    s = sg_get_disk_io_stats(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_diskio_stats() returned NULL'
+        raise StatgrabException, 'sg_get_disk_io_stats() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -318,12 +318,12 @@ def py_get_diskio_stats():
         s = s + 1
     return list
 
-def py_get_diskio_stats_diff():
-    cdef diskio_stat_t *s
+def py_sg_get_disk_io_stats_diff():
+    cdef sg_disk_io_stats *s
     cdef int entries
-    s = get_diskio_stats_diff(&entries)
+    s = sg_get_disk_io_stats_diff(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_diskio_stats_diff() returned NULL'
+        raise StatgrabException, 'sg_get_disk_io_stats_diff() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -336,11 +336,11 @@ def py_get_diskio_stats_diff():
         s = s + 1
     return list
 
-def py_get_process_stats():
-    cdef process_stat_t *s
-    s = get_process_stats()
+def py_sg_get_process_count():
+    cdef sg_process_count *s
+    s = sg_get_process_count()
     if s == NULL:
-        raise StatgrabException, 'get_process_stats() returned NULL'
+        raise StatgrabException, 'sg_get_process_count() returned NULL'
     return Result(
         {'total': s.total,
          'running': s.running,
@@ -350,12 +350,12 @@ def py_get_process_stats():
         }
     )
 
-def py_get_network_stats():
-    cdef network_stat_t *s
+def py_sg_get_network_io_stats():
+    cdef sg_network_io_stats *s
     cdef int entries
-    s = get_network_stats(&entries)
+    s = sg_get_network_io_stats(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_network_stats() returned NULL'
+        raise StatgrabException, 'sg_get_network_io_stats() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -373,12 +373,12 @@ def py_get_network_stats():
         s = s + 1
     return list
 
-def py_get_network_stats_diff():
-    cdef network_stat_t *s
+def py_sg_get_network_io_stats_diff():
+    cdef sg_network_io_stats *s
     cdef int entries
-    s = get_network_stats_diff(&entries)
+    s = sg_get_network_io_stats_diff(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_network_stats_diff() returned NULL'
+        raise StatgrabException, 'sg_get_network_io_stats_diff() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -396,12 +396,12 @@ def py_get_network_stats_diff():
         s = s + 1
     return list
 
-def py_get_network_iface_stats():
-    cdef network_iface_stat_t *s
+def py_sg_get_network_iface_stats():
+    cdef sg_network_iface_stats *s
     cdef int entries
-    s = get_network_iface_stats(&entries)
+    s = sg_get_network_iface_stats(&entries)
     if s == NULL:
-        raise StatgrabException, 'get_network_iface_stats() returned NULL'
+        raise StatgrabException, 'sg_get_network_iface_stats() returned NULL'
     list = []
     for i from 0 <= i < entries:
         list.append(Result(
@@ -414,36 +414,36 @@ def py_get_network_iface_stats():
         s = s + 1
     return list
 
-def py_get_page_stats():
-    cdef page_stat_t *s
-    s = get_page_stats()
+def py_sg_get_page_stats():
+    cdef sg_page_stats *s
+    s = sg_get_page_stats()
     if s == NULL:
-        raise StatgrabException, 'get_page_stats() returned NULL'
+        raise StatgrabException, 'sg_get_page_stats() returned NULL'
     return Result(
         {'pages_pagein': s.pages_pagein,
          'pages_pageout': s.pages_pageout,
         }
     )
 
-def py_get_page_stats_diff():
-    cdef page_stat_t *s
-    s = get_page_stats_diff()
+def py_sg_get_page_stats_diff():
+    cdef sg_page_stats *s
+    s = sg_get_page_stats_diff()
     if s == NULL:
-        raise StatgrabException, 'get_page_stats_diff() returned NULL'
+        raise StatgrabException, 'sg_get_page_stats_diff() returned NULL'
     return Result(
         {'pages_pagein': s.pages_pagein,
          'pages_pageout': s.pages_pageout,
         }
     )
 
-def py_statgrab_init():
-    if statgrab_init() == 0:
+def py_sg_init():
+    if sg_init() == 0:
         return True
     else:
         return False
 
-def py_statgrab_drop_privileges():
-    if statgrab_drop_privileges() == 0:
+def py_sg_drop_privileges():
+    if sg_drop_privileges() == 0:
         return True
     else:
         return False
