@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# i-scream central monitoring system
+# i-scream pystatgrab
 # http://www.i-scream.org
 # Copyright (C) 2000-2004 i-scream
 #
