@@ -1,0 +1,7 @@
+include README
+include NEWS
+include COPYING
+include statgrab.c
+include statgrab.pyx
+include MANIFEST.in
+

@@ -1,0 +1,7 @@
+pystatgrab README
+http://www.i-scream.org/libstatgrab/
+
+$Id$
+
+pystatgrab contains python bindings for libstatgrab. For information
+on libstatgrab see the libstatgrab website given above.

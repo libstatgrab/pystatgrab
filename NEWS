@@ -1,0 +1,9 @@
+pystatgrab NEWS
+http://www.i-scream.org/libstatgrab/
+
+$Id$
+
+pystatgrab 0.1 (21 March 2004)
+
+ * Initial release of pystatgrab.
+ * Requires libstatgrab 0.9.
