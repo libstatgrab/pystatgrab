@@ -3,6 +3,10 @@ http://www.i-scream.org/pystatgrab/
 
 $Id$
 
+pystatgrab 0.3 (24 August 2004)
+
+ * Support for new functions in libstatgrab 0.10.2.
+
 pystatgrab 0.2 (31 March 2004)
 
  * Support for libstatgrab 0.10.

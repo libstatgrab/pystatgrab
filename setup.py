@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # i-scream pystatgrab
-# http://www.i-scream.org
+# http://www.i-scream.org/pystatgrab/
 # Copyright (C) 2000-2004 i-scream
 #
 # This program is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@ import os
 VERSION = "0.3"
 
 # required version of libstatgrab
-LIBSTATGRAB = "0.10"
+LIBSTATGRAB = "0.10.2"
 
 # test for pkg-config presence
 if os.system("pkg-config --version >/dev/null 2>&1"):

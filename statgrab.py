@@ -1,6 +1,6 @@
 #
 # i-scream pystatgrab
-# http://www.i-scream.org
+# http://www.i-scream.org/pystatgrab/
 # Copyright (C) 2000-2004 i-scream
 #
 # This program is free software; you can redistribute it and/or
@@ -28,10 +28,14 @@ def sg_drop_privileges():
     return _statgrab.py_sg_drop_privileges()
 def sg_set_error(code, arg=''):
     return _statgrab.py_sg_set_error(code, arg)
+def sg_set_error_with_errno(code, arg=''):
+    return _statgrab.py_sg_set_error_with_errno(code, arg)
 def sg_get_error():
     return _statgrab.py_sg_get_error()
 def sg_get_error_arg():
     return _statgrab.py_sg_get_error_arg()
+def sg_get_error_errno():
+    return _statgrab.py_sg_get_error_errno()
 def sg_str_error(code):
     return _statgrab.py_sg_str_error(code)
 def sg_get_host_info():

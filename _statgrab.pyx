@@ -1,6 +1,6 @@
 #
 # i-scream pystatgrab
-# http://www.i-scream.org
+# http://www.i-scream.org/pystatgrab/
 # Copyright (C) 2000-2004 i-scream
 #
 # This program is free software; you can redistribute it and/or
@@ -62,8 +62,10 @@ cdef extern from "statgrab.h":
         SG_ERROR_XSW_VER_MISMATCH
 
     cdef extern void sg_set_error(sg_error code, char *arg)
+    cdef extern void sg_set_error_with_errno(sg_error code, char *arg)
     cdef extern sg_error sg_get_error()
     cdef extern char *sg_get_error_arg()
+    cdef extern int sg_get_error_errno()
     cdef extern char *sg_str_error(sg_error code)
 
     ctypedef struct sg_host_info:
@@ -295,6 +297,9 @@ def py_sg_drop_privileges():
 def py_sg_set_error(code, arg):
     sg_set_error(code, arg)
 
+def py_sg_set_error_with_errno(code, arg):
+    sg_set_error_with_errno(code, arg)
+
 def py_sg_get_error():
     cdef sg_error s
     s = sg_get_error()
@@ -302,6 +307,10 @@ def py_sg_get_error():
 
 def py_sg_get_error_arg():
     s = sg_get_error_arg()
+    return s
+
+def py_sg_get_error_errno():
+    s = sg_get_error_errno()
     return s
 
 def py_sg_str_error(code):
