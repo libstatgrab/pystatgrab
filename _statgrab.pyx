@@ -437,7 +437,13 @@ def py_get_page_stats_diff():
     )
 
 def py_statgrab_init():
-    return statgrab_init()
+    if statgrab_init() == 0:
+        return True
+    else:
+        return False
 
 def py_statgrab_drop_privileges():
-    return statgrab_drop_privileges()
+    if statgrab_drop_privileges() == 0:
+        return True
+    else:
+        return False

@@ -30,14 +30,14 @@ if os.system("pkg-config --exists libstatgrab"):
 if os.system("pkg-config --atleast-version=%s libstatgrab" % LIBSTATGRAB):
 	sys.exit("Error, need at least libstatgrab version %s." % LIBSTATGRAB)
 
-# test for statgrab.c, and try to generate if not found
-if not os.path.exists("statgrab.c"):
-	print "statgrab.c doesn't exist, trying to use pyrexc to generate it..."
+# test for _statgrab.c, and try to generate if not found
+if not os.path.exists("_statgrab.c"):
+	print "_statgrab.c doesn't exist, trying to use pyrexc to generate it..."
 	if os.system("pyrexc --version >/dev/null 2>&1"):
-		sys.exit("Error, statgrab.c not present, and can't find pyrexc to generate it with.")
+		sys.exit("Error, _statgrab.c not present, and can't find pyrexc to generate it with.")
 	else:
-		if os.system("pyrexc statgrab.pyx"):
-			sys.exit("Error, pyrexc failed to generate statgrab.c")
+		if os.system("pyrexc _statgrab.pyx"):
+			sys.exit("Error, pyrexc failed to generate _statgrab.c")
 
 # get cflags and libs for libstatgrab
 cflags = getstatusoutput("pkg-config --cflags libstatgrab")
@@ -58,9 +58,10 @@ setup(	name = "pystatgrab",
 	url = "http://www.i-scream.org/libstatgrab/",
 	license = "GNU GPL v2 or later",
 	ext_modules=[Extension(
-		"statgrab",
-		["statgrab.c"],
+		"_statgrab",
+		["_statgrab.c"],
 		extra_compile_args = cflags[1].split(),
 		extra_link_args = libs[1].split(),
 	)],
+	py_modules=["statgrab"],
 )

@@ -2,7 +2,8 @@ include README
 include NEWS
 include COPYING
 include ChangeLog
-include statgrab.c
-include statgrab.pyx
 include MANIFEST.in
+include _statgrab.c
+include _statgrab.pyx
+include statgrab.py
 
