@@ -60,3 +60,7 @@ def statgrab_init():
     return _statgrab.py_statgrab_init()
 def statgrab_drop_privileges():
     return _statgrab.py_statgrab_drop_privileges()
+
+FULL_DUPLEX = _statgrab.py_FULL_DUPLEX
+HALF_DUPLEX = _statgrab.py_HALF_DUPLEX
+UNKNOWN_DUPLEX = _statgrab.py_UNKNOWN_DUPLEX
