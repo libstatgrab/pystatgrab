@@ -50,7 +50,7 @@ if libs[0] != 0:
 	exit("Failed to get libs: " + libs[1])
 
 # setup information
-setup(	name = "statgrab",
+setup(	name = "pystatgrab",
 	version = VERSION,
 	description = "Python bindings for libstatgrab",
 	author = "i-scream",
