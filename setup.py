@@ -63,7 +63,7 @@ if cflags[0] != 0:
 	sys.exit("Failed to get cflags: " + cflags[1])
 
 if libs[0] != 0:
-	exit("Failed to get libs: " + libs[1])
+	sys.exit("Failed to get libs: " + libs[1])
 
 # setup information
 setup(	name = "pystatgrab",
