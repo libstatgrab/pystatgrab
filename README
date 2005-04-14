@@ -11,6 +11,10 @@ Installation is a normal distutils setup:
 
 ./setup.py install
 
+If the installer has problems finding libstatgrab you may need to set
+PKG_CONFIG_PATH to <prefix>/lib/pkgconfig - where prefix is the prefix
+you used when installing libstatgrab (default is /usr/local).
+
 The functions available through pystatgrab directly match those of
 the libstatgrab functions. Documentation on those functions can be
 found in the libstatgrab package, or on the libstatgrab website.
