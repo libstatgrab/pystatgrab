@@ -140,6 +140,13 @@ cdef extern from "statgrab.h":
         long long total_inodes
         long long used_inodes
         long long free_inodes
+        long long avail_inodes
+        long long io_size
+        long long block_size
+        long long total_blocks
+        long long free_blocks
+        long long used_blocks
+        long long avail_blocks
 
     cdef extern sg_fs_stats *sg_get_fs_stats(int *entries)
 
@@ -448,6 +455,13 @@ def py_sg_get_fs_stats():
              'total_inodes': s.total_inodes,
              'used_inodes': s.used_inodes,
              'free_inodes': s.free_inodes,
+             'avail_inodes': s.avail_inodes,
+             'io_size': s.io_size,
+             'block_size': s.block_size,
+             'total_blocks': s.total_blocks,
+             'free_blocks': s.free_blocks,
+             'used_blocks': s.used_blocks,
+             'avail_blocks': s.avail_blocks,
             }
         ))
         s = s + 1
