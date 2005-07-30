@@ -32,7 +32,7 @@ import os
 VERSION = "0.4"
 
 # required version of libstatgrab
-LIBSTATGRAB = "0.10.2"
+LIBSTATGRAB = "0.12"
 
 # test for pkg-config presence
 if os.system("pkg-config --version >/dev/null 2>&1"):

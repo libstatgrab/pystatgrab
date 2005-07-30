@@ -3,6 +3,10 @@ http://www.i-scream.org/pystatgrab/
 
 $Id$
 
+pystatgrab 0.4 (31 July 2005)
+
+ * Chase API changes in libstagrab 0.12.
+
 pystatgrab 0.3 (24 August 2004)
 
  * Support for new functions in libstatgrab 0.10.2.
