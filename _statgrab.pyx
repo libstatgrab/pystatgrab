@@ -174,7 +174,7 @@ cdef extern from "statgrab.h":
     ctypedef struct sg_network_iface_stats:
         char *interface_name
         int speed
-        sg_iface_duplex dup
+        sg_iface_duplex duplex
         int up
 
     cdef extern sg_network_iface_stats *sg_get_network_iface_stats(int *entries)
@@ -546,7 +546,7 @@ def py_sg_get_network_iface_stats():
         list.append(Result(
             {'interface_name': s.interface_name,
              'speed': s.speed,
-             'dup': s.dup,
+             'duplex': s.duplex,
              'up' : s.up,
             }
         ))
