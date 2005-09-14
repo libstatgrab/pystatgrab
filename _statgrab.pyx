@@ -597,13 +597,17 @@ def py_sg_get_process_stats():
         raise StatgrabException, 'sg_get_process_stats() returned NULL'
     list = []
     for i from 0 <= i < entries:
-        if s.process_name == NULL:
-            s.process_name = ''
-        if s.proctitle == NULL:
-            s.proctitle = ''
+        if s.process_name is NULL:
+            process_name = ''
+        else:
+            process_name = s.process_name
+        if s.proctitle is NULL:
+            proctitle = ''
+        else:
+            proctitle = s.proctitle
         list.append(Result(
-            {'process_name': s.process_name,
-             'proctitle' : s.proctitle,
+            {'process_name': process_name,
+             'proctitle' : proctitle,
              'pid' : s.pid,
              'parent' : s.parent,
              'pgid' : s.pgid,
