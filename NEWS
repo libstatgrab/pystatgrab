@@ -3,9 +3,14 @@ http://www.i-scream.org/pystatgrab/
 
 $Id$
 
+pystatgrab 0.5 (14 July 2007)
+
+ * Chase API changes in libstatgrab 0.13.
+ * Fix segfault when calling sg_get_process_stats.
+
 pystatgrab 0.4 (31 July 2005)
 
- * Chase API changes in libstagrab 0.12.
+ * Chase API changes in libstatgrab 0.12.
 
 pystatgrab 0.3 (24 August 2004)
 
