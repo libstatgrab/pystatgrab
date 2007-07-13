@@ -29,7 +29,7 @@ import sys
 import os
 
 # version of pystatgrab
-VERSION = "0.5"
+VERSION = "0.6"
 
 # required version of libstatgrab
 LIBSTATGRAB = "0.13"
