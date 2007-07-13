@@ -295,6 +295,18 @@ def py_sg_init():
     else:
         return False
 
+def py_sg_shutdown():
+    if sg_shutdown() == 0:
+        return True
+    else:
+        return False
+
+def py_sg_snapshot():
+    if sg_snapshot() == 0:
+        return True
+    else:
+        return False
+
 def py_sg_drop_privileges():
     if sg_drop_privileges() == 0:
         return True

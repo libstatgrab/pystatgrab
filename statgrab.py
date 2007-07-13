@@ -24,6 +24,10 @@ import _statgrab
 
 def sg_init():
     return _statgrab.py_sg_init()
+def sg_snapshot():
+    return _statgrab.py_sg_snapshot()
+def sg_shutdown():
+    return _statgrab.py_sg_shutdown()
 def sg_drop_privileges():
     return _statgrab.py_sg_drop_privileges()
 def sg_set_error(code, arg=''):
