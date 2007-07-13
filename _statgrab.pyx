@@ -27,6 +27,8 @@ ctypedef int gid_t
 
 cdef extern from "statgrab.h":
     cdef extern int sg_init()
+    cdef extern int sg_shutdown()
+    cdef extern int sg_snapshot()
     cdef extern int sg_drop_privileges()
 
     ctypedef enum sg_error:
