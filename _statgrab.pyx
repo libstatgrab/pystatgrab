@@ -274,15 +274,16 @@ py_SG_PROCESS_STATE_ZOMBIE = SG_PROCESS_STATE_ZOMBIE
 py_SG_PROCESS_STATE_UNKNOWN = SG_PROCESS_STATE_UNKNOWN
 
 
-class Result:
+class Result(dict):
     def __init__(self, attrs):
-        self.attrs = attrs
-        for attr in attrs:
-            setattr(self, attr, attrs[attr])
-    def __getitem__(self, item):
-        return getattr(self, item)
-    def __repr__(self):
-        return str(self.attrs)
+        self.attrs = attrs # to maintain compatibility
+        super(Result, self).__init__(attrs)
+
+    def __getattr__(self, item):
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            raise AttributeError(item)
 
 class StatgrabException(Exception):
     def __init__(self, value):
