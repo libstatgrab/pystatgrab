@@ -72,10 +72,9 @@ setup(name = "pystatgrab",
     license = "GNU GPL v2 or later",
     cmdclass = {"build_ext": build_ext},
     ext_modules = [Extension(
-        "_statgrab",
-        ["_statgrab.pyx"],
+        "statgrab",
+        ["statgrab.pyx"],
         extra_compile_args = cflags.split(),
         extra_link_args = libs.split(),
     )],
-    py_modules = ["statgrab"],
 )
