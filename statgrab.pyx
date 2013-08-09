@@ -20,6 +20,8 @@
 # $Id$
 #
 
+from libc.stdlib cimport malloc, free
+
 ctypedef long time_t
 ctypedef int pid_t
 ctypedef int uid_t
@@ -91,7 +93,7 @@ cdef extern from "statgrab.h":
     const char *sg_str_error(sg_error code)
     char *sg_strperror(char **buf, const sg_error_details * const err_details)
 
-    sg_error sg_init(int ignore_init_errors)
+    sg_error sg_init(bint ignore_init_errors)
     sg_error sg_shutdown()
     sg_error sg_snapshot()
     sg_error sg_drop_privileges()
@@ -253,8 +255,8 @@ cdef extern from "statgrab.h":
     sg_fs_stats *sg_get_fs_stats_diff_between(const sg_fs_stats *cur, const sg_fs_stats *last, size_t *entries)
     sg_error sg_free_fs_stats(sg_fs_stats *stats)
 
-    int sg_fs_compare_device_name(const sg_fs_stats *va, const sg_fs_stats *vb)
-    int sg_fs_compare_mnt_point(const sg_fs_stats *va, const sg_fs_stats *vb)
+    # sg_fs_compare_device_name not wrapped - not needed
+    # sg_fs_compare_mnt_point not wrapped - not needed
 
     ctypedef struct sg_disk_io_stats:
         char *disk_name
@@ -268,8 +270,8 @@ cdef extern from "statgrab.h":
     sg_disk_io_stats *sg_get_disk_io_stats_diff_between(const sg_disk_io_stats *cur, const sg_disk_io_stats *last, size_t *entries)
     sg_error sg_free_disk_io_stats(sg_disk_io_stats *stats)
 
-    int sg_disk_io_compare_name(const sg_disk_io_stats *va, const sg_disk_io_stats *vb)
-    int sg_disk_io_compare_traffic(const sg_disk_io_stats *va, const sg_disk_io_stats *vb)
+    # sg_disk_io_compare_name not wrapped - not needed
+    # sg_disk_io_compare_traffic not wrapped - not needed
 
     ctypedef struct sg_network_io_stats:
         char *interface_name
@@ -288,7 +290,7 @@ cdef extern from "statgrab.h":
     sg_network_io_stats *sg_get_network_io_stats_diff_between(const sg_network_io_stats *cur, const sg_network_io_stats *last, size_t *entries)
     sg_error sg_free_network_io_stats(sg_network_io_stats *stats)
 
-    int sg_network_io_compare_name(const sg_network_io_stats *va, const sg_network_io_stats *vb)
+    # sg_network_io_compare_name not wrapped - not needed
 
     ctypedef enum sg_iface_duplex:
         SG_IFACE_DUPLEX_FULL
@@ -311,7 +313,7 @@ cdef extern from "statgrab.h":
     sg_network_iface_stats *sg_get_network_iface_stats_r(size_t *entries)
     sg_error sg_free_network_iface_stats(sg_network_iface_stats *stats)
 
-    int sg_network_iface_compare_name(const sg_network_iface_stats *va, const sg_network_iface_stats *vb)
+    # sg_network_iface_compare_name not wrapped - not needed
 
     ctypedef struct sg_page_stats:
         unsigned long long pages_pagein
@@ -362,14 +364,14 @@ cdef extern from "statgrab.h":
     sg_process_stats *sg_get_process_stats_r(size_t *entries)
     sg_error sg_free_process_stats(sg_process_stats *stats)
 
-    int sg_process_compare_name(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_pid(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_uid(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_gid(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_size(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_res(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_cpu(const sg_process_stats *va, const sg_process_stats *vb)
-    int sg_process_compare_time(const sg_process_stats *va, const sg_process_stats *vb)
+    # sg_process_compare_name not wrapped - not needed
+    # sg_process_compare_pid not wrapped - not needed
+    # sg_process_compare_uid not wrapped - not needed
+    # sg_process_compare_gid not wrapped - not needed
+    # sg_process_compare_size not wrapped - not needed
+    # sg_process_compare_res not wrapped - not needed
+    # sg_process_compare_cpu not wrapped - not needed
+    # sg_process_compare_time not wrapped - not needed
 
     ctypedef struct sg_process_count:
         unsigned long long total
@@ -388,6 +390,8 @@ cdef extern from "statgrab.h":
     sg_process_count *sg_get_process_count_r(sg_process_stats *whereof)
     sg_process_count *sg_get_process_count()
     sg_error sg_free_process_count(sg_process_count *stats)
+
+# libstatgrab constants exported
 
 ERROR_NONE = SG_ERROR_NONE
 ERROR_INVALID_ARGUMENT = SG_ERROR_INVALID_ARGUMENT
@@ -441,6 +445,10 @@ ERROR_INITIALISATION = SG_ERROR_INITIALISATION
 ERROR_MUTEX_LOCK = SG_ERROR_MUTEX_LOCK
 ERROR_MUTEX_UNLOCK = SG_ERROR_MUTEX_UNLOCK
 
+entire_cpu_percent = sg_entire_cpu_percent
+last_diff_cpu_percent = sg_last_diff_cpu_percent
+new_diff_cpu_percent = sg_new_diff_cpu_percent
+
 IFACE_DUPLEX_FULL = SG_IFACE_DUPLEX_FULL
 IFACE_DUPLEX_HALF = SG_IFACE_DUPLEX_HALF
 IFACE_DUPLEX_UNKNOWN = SG_IFACE_DUPLEX_UNKNOWN
@@ -454,11 +462,43 @@ PROCESS_STATE_STOPPED = SG_PROCESS_STATE_STOPPED
 PROCESS_STATE_ZOMBIE = SG_PROCESS_STATE_ZOMBIE
 PROCESS_STATE_UNKNOWN = SG_PROCESS_STATE_UNKNOWN
 
+entire_process_count = sg_entire_process_count
+last_process_count = sg_last_process_count
+
+# Helper code
+
+class StatgrabError(Exception):
+    """Exception representing a libstatgrab error."""
+    def __init__(self):
+        cdef sg_error_details details
+        sg_get_error_details(&details)
+        self.error = details.error
+        self.errno_value = details.errno_value
+        self.error_arg = details.error_arg
+
+        cdef char *msg = NULL
+        sg_strperror(&msg, &details)
+        super(StatgrabError, self).__init__("statgrab error: " + msg)
+        free(msg)
+
+cdef int _not_error(sg_error code) except -1:
+    """Raise StatgrabError if code is not SG_ERROR_NONE."""
+    if code != ERROR_NONE:
+        raise StatgrabError()
+    return 0
+
+cdef int _not_null(const void *value) except -1:
+    """Raise StatgrabError if value is NULL."""
+    if value == NULL:
+        raise StatgrabError()
+    return 0
 
 class Result(dict):
     def __init__(self, attrs):
-        self.attrs = attrs # to maintain compatibility
         super(Result, self).__init__(attrs)
+
+        # For compatibility with older pystatgrab.
+        self.attrs = attrs
 
     def __getattr__(self, item):
         try:
@@ -466,366 +506,302 @@ class Result(dict):
         except KeyError:
             raise AttributeError(item)
 
-class StatgrabException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+# libstatgrab functions exported
 
+# FIXME: docstrings
 
-def py_sg_init(ignore_init_errors=0):
-    if sg_init(ignore_init_errors) == 0:
-        return True
-    else:
-        return False
+def init(ignore_init_errors=False):
+    _not_error(sg_init(ignore_init_errors))
 
-def py_sg_shutdown():
-    if sg_shutdown() == 0:
-        return True
-    else:
-        return False
+def snapshot():
+    _not_error(sg_snapshot())
 
-def py_sg_snapshot():
-    if sg_snapshot() == 0:
-        return True
-    else:
-        return False
+def shutdown():
+    _not_error(sg_shutdown())
 
-def py_sg_drop_privileges():
-    if sg_drop_privileges() == 0:
-        return True
-    else:
-        return False
+def drop_privileges():
+    _not_error(sg_drop_privileges())
 
-def py_sg_get_error():
-    cdef sg_error s
-    s = sg_get_error()
-    return s
+def get_host_info():
+    cdef const sg_host_info *s = sg_get_host_info(NULL)
+    _not_null(s)
+    return Result({
+        'os_name': s.os_name,
+        'os_release': s.os_release,
+        'os_version': s.os_version,
+        'platform': s.platform,
+        'hostname': s.hostname,
+        'bitwidth': s.bitwidth,
+        'host_state': s.host_state,
+        'ncpus': s.ncpus,
+        'maxcpus': s.maxcpus,
+        'uptime': s.uptime,
+        'systime': s.systime,
+        })
 
-def py_sg_get_error_arg():
-    s = sg_get_error_arg()
-    return s
+cdef _make_cpu_stats(const sg_cpu_stats *s):
+    return Result({
+        'user': s.user,
+        'kernel': s.kernel,
+        'idle': s.idle,
+        'iowait': s.iowait,
+        'swap': s.swap,
+        'nice': s.nice,
+        'total': s.total,
+        'context_switches': s.context_switches,
+        'voluntary_context_switches': s.voluntary_context_switches,
+        'involuntary_context_switches': s.involuntary_context_switches,
+        'syscalls': s.syscalls,
+        'interrupts': s.interrupts,
+        'soft_interrupts': s.soft_interrupts,
+        'systime': s.systime,
+        })
 
-def py_sg_get_error_errno():
-    s = sg_get_error_errno()
-    return s
+def get_cpu_stats():
+    cdef const sg_cpu_stats *s = sg_get_cpu_stats(NULL)
+    _not_null(s)
+    return _make_cpu_stats(s)
 
-def py_sg_str_error(code):
-    s = sg_str_error(code)
-    return s
+def get_cpu_stats_diff():
+    cdef const sg_cpu_stats *s = sg_get_cpu_stats_diff(NULL)
+    _not_null(s)
+    return _make_cpu_stats(s)
 
-def py_sg_get_host_info():
-    cdef sg_host_info *s
-    s = sg_get_host_info()
+def get_cpu_percents(cps=new_diff_cpu_percent):
+    cdef const sg_cpu_percents *s = sg_get_cpu_percents(NULL)
+    _not_null(s)
+    return Result({
+        'user': s.user,
+        'kernel': s.kernel,
+        'idle': s.idle,
+        'iowait': s.iowait,
+        'swap': s.swap,
+        'nice': s.nice,
+        'time_taken': s.time_taken,
+        })
+
+def get_mem_stats():
+    cdef const sg_mem_stats *s = sg_get_mem_stats(NULL)
+    _not_null(s)
+    return Result({
+        'total': s.total,
+        'free': s.free,
+        'used': s.used,
+        'cache': s.cache,
+        'systime': s.systime,
+        })
+
+def get_load_stats():
+    cdef const sg_load_stats *s = sg_get_load_stats(NULL)
+    _not_null(s)
+    return Result({
+        'min1': s.min1,
+        'min5': s.min5,
+        'min15': s.min15,
+        'systime': s.systime,
+        })
+
+cdef _make_user_stats(const sg_user_stats *s):
+    return Result({
+        'login_name': s.login_name,
+        # Note special handling for record_id.
+        'record_id': s.record_id[:s.record_id_size],
+        'device': s.device,
+        'hostname': s.hostname,
+        'pid': s.pid,
+        'login_time': s.login_time,
+        'systime': s.systime,
+        })
+
+def get_user_stats():
+    cdef size_t n
+    cdef const sg_user_stats *s = sg_get_user_stats(&n)
+    _not_null(s)
+    return [_make_user_stats(&s[i]) for i in range(n)]
+
+def get_swap_stats():
+    cdef const sg_swap_stats *s = sg_get_swap_stats(NULL)
+    _not_null(s)
+    return Result({
+        'total': s.total,
+        'used': s.used,
+        'free': s.free,
+        'systime': s.systime,
+        })
+
+def get_valid_filesystems():
+    cdef size_t n
+    cdef const char **s = sg_get_valid_filesystems(&n)
     if s == NULL:
-        raise StatgrabException, 'sg_get_host_info() returned NULL'
-    return Result(
-        {'os_name': s.os_name,
-         'os_release': s.os_release,
-         'os_version': s.os_version,
-         'platform': s.platform,
-         'hostname': s.hostname,
-         'uptime': s.uptime,
-        }
-    )
+        print "argh"
+    _not_null(s)
+    return [s[i] for i in range(n)]
 
-def py_sg_get_cpu_stats():
-    cdef sg_cpu_stats *s
-    s = sg_get_cpu_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_cpu_stats() returned NULL'
-    return Result(
-        {'user': s.user,
-         'kernel': s.kernel,
-         'idle': s.idle,
-         'iowait': s.iowait,
-         'swap': s.swap,
-         'nice': s.nice,
-         'total': s.total,
-         'systime': s.systime,
-        }
-    )
+def set_valid_filesystems(valid_fs):
+    cdef int num_fs = len(valid_fs)
+    cdef const char **vs
+    vs = <const char **>malloc((num_fs + 1) * sizeof(const char *))
+    if vs == NULL:
+        raise MemoryError("malloc failed")
+    for i in range(num_fs):
+        vs[i] = valid_fs[i]
+    vs[num_fs] = NULL
+    _not_error(sg_set_valid_filesystems(vs))
+    free(vs)
 
-def py_sg_get_cpu_stats_diff():
-    cdef sg_cpu_stats *s
-    s = sg_get_cpu_stats_diff()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_cpu_stats_diff() returned NULL'
-    return Result(
-        {'user': s.user,
-         'kernel': s.kernel,
-         'idle': s.idle,
-         'iowait': s.iowait,
-         'swap': s.swap,
-         'nice': s.nice,
-         'total': s.total,
-         'systime': s.systime,
-        }
-    )
+cdef _make_fs_stats(const sg_fs_stats *s):
+    return Result({
+        'device_name': s.device_name,
+        'fs_type': s.fs_type,
+        'mnt_point': s.mnt_point,
+        'device_type': s.device_type,
+        'size': s.size,
+        'used': s.used,
+        'free': s.free,
+        'avail': s.avail,
+        'total_inodes': s.total_inodes,
+        'used_inodes': s.used_inodes,
+        'free_inodes': s.free_inodes,
+        'avail_inodes': s.avail_inodes,
+        'io_size': s.io_size,
+        'block_size': s.block_size,
+        'total_blocks': s.total_blocks,
+        'free_blocks': s.free_blocks,
+        'used_blocks': s.used_blocks,
+        'avail_blocks': s.avail_blocks,
+        'systime': s.systime,
+        })
 
-def py_sg_get_cpu_percents():
-    cdef sg_cpu_percents *s
-    s = sg_get_cpu_percents()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_cpu_percents() returned NULL'
-    return Result(
-        {'user': s.user,
-         'kernel': s.kernel,
-         'idle': s.idle,
-         'iowait': s.iowait,
-         'swap': s.swap,
-         'nice': s.nice,
-         'time_taken': s.time_taken,
-        }
-    )
+def get_fs_stats():
+    cdef size_t n
+    cdef const sg_fs_stats *s = sg_get_fs_stats(&n)
+    _not_null(s)
+    return [_make_fs_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_mem_stats():
-    cdef sg_mem_stats *s
-    s = sg_get_mem_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_mem_stats() returned NULL'
-    return Result(
-        {'total': s.total,
-         'used': s.used,
-         'free': s.free,
-         'cache': s.cache,
-        }
-    )
+def get_fs_stats_diff():
+    cdef size_t n
+    cdef const sg_fs_stats *s = sg_get_fs_stats_diff(&n)
+    _not_null(s)
+    return [_make_fs_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_load_stats():
-    cdef sg_load_stats *s
-    s = sg_get_load_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_load_stats() returned NULL'
-    return Result(
-        {'min1': s.min1,
-         'min5': s.min5,
-         'min15': s.min15,
-        }
-    )
+cdef _make_disk_io_stats(const sg_disk_io_stats *s):
+    return Result({
+        'disk_name': s.disk_name,
+        'read_bytes': s.read_bytes,
+        'write_bytes': s.write_bytes,
+        'systime': s.systime,
+    })
 
-def py_sg_get_user_stats():
-    cdef sg_user_stats *s
-    s = sg_get_user_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_user_stats() returned NULL'
-    return Result(
-        {'name_list': s.name_list,
-         'num_entries': s.num_entries,
-        }
-    )
+def get_disk_io_stats():
+    cdef size_t n
+    cdef const sg_disk_io_stats *s = sg_get_disk_io_stats(&n)
+    _not_null(s)
+    return [_make_disk_io_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_swap_stats():
-    cdef sg_swap_stats *s
-    s = sg_get_swap_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_swap_stats() returned NULL'
-    return Result(
-        {'total': s.total,
-         'used': s.used,
-         'free': s.free,
-        }
-    )
+def get_disk_io_stats_diff():
+    cdef size_t n
+    cdef const sg_disk_io_stats *s = sg_get_disk_io_stats_diff(&n)
+    _not_null(s)
+    return [_make_disk_io_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_fs_stats():
-    cdef sg_fs_stats *s
-    cdef int entries
-    s = sg_get_fs_stats(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_fs_stats() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'device_name': s.device_name,
-             'fs_type': s.fs_type,
-             'mnt_point': s.mnt_point,
-             'size': s.size,
-             'used': s.used,
-             'avail': s.avail,
-             'total_inodes': s.total_inodes,
-             'used_inodes': s.used_inodes,
-             'free_inodes': s.free_inodes,
-             'avail_inodes': s.avail_inodes,
-             'io_size': s.io_size,
-             'block_size': s.block_size,
-             'total_blocks': s.total_blocks,
-             'free_blocks': s.free_blocks,
-             'used_blocks': s.used_blocks,
-             'avail_blocks': s.avail_blocks,
-            }
-        ))
-        s = s + 1
-    return list
+cdef _make_network_io_stats(const sg_network_io_stats *s):
+    return Result({
+        'interface_name': s.interface_name,
+        'tx': s.tx,
+        'rx': s.rx,
+        'ipackets': s.ipackets,
+        'opackets': s.opackets,
+        'ierrors': s.ierrors,
+        'oerrors': s.oerrors,
+        'collisions': s.collisions,
+        'systime': s.systime,
+        })
 
-def py_sg_get_disk_io_stats():
-    cdef sg_disk_io_stats *s
-    cdef int entries
-    s = sg_get_disk_io_stats(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_disk_io_stats() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'disk_name': s.disk_name,
-             'read_bytes': s.read_bytes,
-             'write_bytes': s.write_bytes,
-             'systime': s.systime,
-            }
-        ))
-        s = s + 1
-    return list
+def get_network_io_stats():
+    cdef size_t n
+    cdef const sg_network_io_stats *s = sg_get_network_io_stats(&n)
+    _not_null(s)
+    return [_make_network_io_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_disk_io_stats_diff():
-    cdef sg_disk_io_stats *s
-    cdef int entries
-    s = sg_get_disk_io_stats_diff(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_disk_io_stats_diff() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'disk_name': s.disk_name,
-             'read_bytes': s.read_bytes,
-             'write_bytes': s.write_bytes,
-             'systime': s.systime,
-            }
-        ))
-        s = s + 1
-    return list
+def get_network_io_stats_diff():
+    cdef size_t n
+    cdef const sg_network_io_stats *s = sg_get_network_io_stats_diff(&n)
+    _not_null(s)
+    return [_make_network_io_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_network_io_stats():
-    cdef sg_network_io_stats *s
-    cdef int entries
-    s = sg_get_network_io_stats(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_network_io_stats() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'interface_name': s.interface_name,
-             'tx': s.tx,
-             'rx': s.rx,
-             'ipackets': s.ipackets,
-             'opackets': s.opackets,
-             'ierrors': s.ierrors,
-             'oerrors': s.oerrors,
-             'collisions': s.collisions,
-             'systime': s.systime,
-            }
-        ))
-        s = s + 1
-    return list
+cdef _make_network_iface_stats(const sg_network_iface_stats *s):
+    return Result({
+        'interface_name': s.interface_name,
+        'speed': s.speed,
+        'factor': s.factor,
+        'duplex': s.duplex,
+        'up': s.up,
+        'systime': s.systime,
+        })
 
-def py_sg_get_network_io_stats_diff():
-    cdef sg_network_io_stats *s
-    cdef int entries
-    s = sg_get_network_io_stats_diff(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_network_io_stats_diff() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'interface_name': s.interface_name,
-             'tx': s.tx,
-             'rx': s.rx,
-             'ipackets': s.ipackets,
-             'opackets': s.opackets,
-             'ierrors': s.ierrors,
-             'oerrors': s.oerrors,
-             'collisions': s.collisions,
-             'systime': s.systime,
-            }
-        ))
-        s = s + 1
-    return list
+def get_network_iface_stats():
+    cdef size_t n
+    cdef const sg_network_iface_stats *s = sg_get_network_iface_stats(&n)
+    _not_null(s)
+    return [_make_network_iface_stats(&s[i]) for i in range(n)]
 
-def py_sg_get_network_iface_stats():
-    cdef sg_network_iface_stats *s
-    cdef int entries
-    s = sg_get_network_iface_stats(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_network_iface_stats() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        list.append(Result(
-            {'interface_name': s.interface_name,
-             'speed': s.speed,
-             'duplex': s.duplex,
-             'up' : s.up,
-            }
-        ))
-        s = s + 1
-    return list
+cdef _make_page_stats(const sg_page_stats *s):
+    return Result({
+        'pages_pagein': s.pages_pagein,
+        'pages_pageout': s.pages_pageout,
+        'systime': s.systime,
+        })
 
-def py_sg_get_page_stats():
-    cdef sg_page_stats *s
-    s = sg_get_page_stats()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_page_stats() returned NULL'
-    return Result(
-        {'pages_pagein': s.pages_pagein,
-         'pages_pageout': s.pages_pageout,
-        }
-    )
+def get_page_stats():
+    cdef const sg_page_stats *s = sg_get_page_stats(NULL)
+    _not_null(s)
+    return _make_page_stats(s)
 
-def py_sg_get_page_stats_diff():
-    cdef sg_page_stats *s
-    s = sg_get_page_stats_diff()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_page_stats_diff() returned NULL'
-    return Result(
-        {'pages_pagein': s.pages_pagein,
-         'pages_pageout': s.pages_pageout,
-        }
-    )
+def get_page_stats_diff():
+    cdef const sg_page_stats *s = sg_get_page_stats_diff(NULL)
+    _not_null(s)
+    return _make_page_stats(s)
 
-def py_sg_get_process_stats():
-    cdef sg_process_stats *s
-    cdef int entries
-    s = sg_get_process_stats(&entries)
-    if s == NULL:
-        raise StatgrabException, 'sg_get_process_stats() returned NULL'
-    list = []
-    for i from 0 <= i < entries:
-        if s.process_name is NULL:
-            process_name = ''
-        else:
-            process_name = s.process_name
-        if s.proctitle is NULL:
-            proctitle = ''
-        else:
-            proctitle = s.proctitle
-        list.append(Result(
-            {'process_name': process_name,
-             'proctitle' : proctitle,
-             'pid' : s.pid,
-             'parent' : s.parent,
-             'pgid' : s.pgid,
-             'uid' : s.uid,
-             'euid' : s.euid,
-             'gid' : s.gid,
-             'egid' : s.egid,
-             'proc_size' : s.proc_size,
-             'proc_resident' : s.proc_resident,
-             'time_spent' : s.time_spent,
-             'cpu_percent' : s.cpu_percent,
-             'nice' : s.nice,
-             'state' : s.state,
-            }
-        ))
-        s = s + 1
-    return list
+cdef _make_process_stats(const sg_process_stats *s):
+    return Result({
+        'process_name': s.process_name,
+        'proctitle': s.proctitle,
+        'pid': s.pid,
+        'parent': s.parent,
+        'pgid': s.pgid,
+        'sessid': s.sessid,
+        'uid': s.uid,
+        'euid': s.euid,
+        'gid': s.gid,
+        'egid': s.egid,
+        'context_switches': s.context_switches,
+        'voluntary_context_switches': s.voluntary_context_switches,
+        'involuntary_context_switches': s.involuntary_context_switches,
+        'proc_size': s.proc_size,
+        'proc_resident': s.proc_resident,
+        'start_time': s.start_time,
+        'time_spent': s.time_spent,
+        'cpu_percent': s.cpu_percent,
+        'nice': s.nice,
+        'state': s.state,
+        'systime': s.systime,
+        })
 
-def py_sg_get_process_count():
-    cdef sg_process_count *s
-    s = sg_get_process_count()
-    if s == NULL:
-        raise StatgrabException, 'sg_get_process_count() returned NULL'
-    return Result(
-        {'total': s.total,
-         'running': s.running,
-         'sleeping': s.sleeping,
-         'stopped': s.stopped,
-         'zombie': s.zombie,
-        }
-    )
+def get_process_stats():
+    cdef size_t n
+    cdef const sg_process_stats *s = sg_get_process_stats(&n)
+    _not_null(s)
+    return [_make_process_stats(&s[i]) for i in range(n)]
+
+def get_process_count(pcs=entire_process_count):
+    cdef const sg_process_count *s = sg_get_process_count_of(pcs)
+    _not_null(s)
+    return Result({
+        'total': s.total,
+        'running': s.running,
+        'sleeping': s.sleeping,
+        'stopped': s.stopped,
+        'zombie': s.zombie,
+        'unknown': s.unknown,
+        'systime': s.systime,
+        })
