@@ -33,7 +33,7 @@ import os
 VERSION = "0.6"
 
 # required version of libstatgrab
-LIBSTATGRAB = "0.13"
+LIBSTATGRAB = "0.90"
 
 def warn(*s):
     sys.stderr.write("".join(map(str, s)) + "\n")
