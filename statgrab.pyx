@@ -438,3 +438,126 @@ def get_process_count(pcs=entire_process_count):
         'unknown': s.unknown,
         'systime': s.systime,
         })
+
+# Backwards compatibility with pystatgrab <= 0.5
+
+SG_ERROR_NONE = ERROR_NONE
+SG_ERROR_INVALID_ARGUMENT = ERROR_INVALID_ARGUMENT
+SG_ERROR_ASPRINTF = ERROR_ASPRINTF
+SG_ERROR_SPRINTF = ERROR_SPRINTF
+SG_ERROR_DEVICES = ERROR_DEVICES
+SG_ERROR_DEVSTAT_GETDEVS = ERROR_DEVSTAT_GETDEVS
+SG_ERROR_DEVSTAT_SELECTDEVS = ERROR_DEVSTAT_SELECTDEVS
+SG_ERROR_DISKINFO = ERROR_DISKINFO
+SG_ERROR_ENOENT = ERROR_ENOENT
+SG_ERROR_GETIFADDRS = ERROR_GETIFADDRS
+SG_ERROR_GETMNTINFO = ERROR_GETMNTINFO
+SG_ERROR_GETPAGESIZE = ERROR_GETPAGESIZE
+SG_ERROR_HOST = ERROR_HOST
+SG_ERROR_KSTAT_DATA_LOOKUP = ERROR_KSTAT_DATA_LOOKUP
+SG_ERROR_KSTAT_LOOKUP = ERROR_KSTAT_LOOKUP
+SG_ERROR_KSTAT_OPEN = ERROR_KSTAT_OPEN
+SG_ERROR_KSTAT_READ = ERROR_KSTAT_READ
+SG_ERROR_KVM_GETSWAPINFO = ERROR_KVM_GETSWAPINFO
+SG_ERROR_KVM_OPENFILES = ERROR_KVM_OPENFILES
+SG_ERROR_MALLOC = ERROR_MALLOC
+SG_ERROR_MEMSTATUS = ERROR_MEMSTATUS
+SG_ERROR_OPEN = ERROR_OPEN
+SG_ERROR_OPENDIR = ERROR_OPENDIR
+SG_ERROR_READDIR = ERROR_READDIR
+SG_ERROR_PARSE = ERROR_PARSE
+SG_ERROR_PDHADD = ERROR_PDHADD
+SG_ERROR_PDHCOLLECT = ERROR_PDHCOLLECT
+SG_ERROR_PDHOPEN = ERROR_PDHOPEN
+SG_ERROR_PDHREAD = ERROR_PDHREAD
+SG_ERROR_PERMISSION = ERROR_PERMISSION
+SG_ERROR_PSTAT = ERROR_PSTAT
+SG_ERROR_SETEGID = ERROR_SETEGID
+SG_ERROR_SETEUID = ERROR_SETEUID
+SG_ERROR_SETMNTENT = ERROR_SETMNTENT
+SG_ERROR_SOCKET = ERROR_SOCKET
+SG_ERROR_SWAPCTL = ERROR_SWAPCTL
+SG_ERROR_SYSCONF = ERROR_SYSCONF
+SG_ERROR_SYSCTL = ERROR_SYSCTL
+SG_ERROR_SYSCTLBYNAME = ERROR_SYSCTLBYNAME
+SG_ERROR_SYSCTLNAMETOMIB = ERROR_SYSCTLNAMETOMIB
+SG_ERROR_SYSINFO = ERROR_SYSINFO
+SG_ERROR_MACHCALL = ERROR_MACHCALL
+SG_ERROR_IOKIT = ERROR_IOKIT
+SG_ERROR_UNAME = ERROR_UNAME
+SG_ERROR_UNSUPPORTED = ERROR_UNSUPPORTED
+SG_ERROR_XSW_VER_MISMATCH = ERROR_XSW_VER_MISMATCH
+SG_ERROR_GETMSG = ERROR_GETMSG
+SG_ERROR_PUTMSG = ERROR_PUTMSG
+SG_ERROR_INITIALISATION = ERROR_INITIALISATION
+SG_ERROR_MUTEX_LOCK = ERROR_MUTEX_LOCK
+SG_ERROR_MUTEX_UNLOCK = ERROR_MUTEX_UNLOCK
+
+SG_IFACE_DUPLEX_FULL = IFACE_DUPLEX_FULL
+SG_IFACE_DUPLEX_HALF = IFACE_DUPLEX_HALF
+SG_IFACE_DUPLEX_UNKNOWN = IFACE_DUPLEX_UNKNOWN
+
+SG_IFACE_DOWN = IFACE_DOWN
+SG_IFACE_UP = IFACE_UP
+
+SG_PROCESS_STATE_RUNNING = PROCESS_STATE_RUNNING
+SG_PROCESS_STATE_SLEEPING = PROCESS_STATE_SLEEPING
+SG_PROCESS_STATE_STOPPED = PROCESS_STATE_STOPPED
+SG_PROCESS_STATE_ZOMBIE = PROCESS_STATE_ZOMBIE
+SG_PROCESS_STATE_UNKNOWN = PROCESS_STATE_UNKNOWN
+
+# Some functions returned True/False for success/failure.
+def _wrap_success(func, *args):
+    try:
+        func(*args)
+        return True
+    except StatgrabError:
+        return False
+
+def sg_init():
+    return _wrap_success(init)
+def sg_snapshot():
+    return _wrap_success(snapshot)
+def sg_shutdown():
+    return _wrap_success(shutdown)
+def sg_drop_privileges():
+    return _wrap_success(drop_privileges)
+
+# The error-handling functions just wrapped those from libstatgrab.
+def sg_get_error():
+    return sg.sg_get_error()
+def sg_get_error_arg():
+    return sg_get_error_arg()
+def sg_get_error_errno():
+    return sg_get_error_errno()
+def sg_str_error(code):
+    return sg_str_error(code)
+
+# Some functions work the same way, just with a different name.
+sg_get_host_info = get_host_info
+sg_get_cpu_stats = get_cpu_stats
+sg_get_cpu_stats_diff = get_cpu_stats_diff
+sg_get_cpu_percents = get_cpu_percents
+sg_get_mem_stats = get_mem_stats
+sg_get_load_stats = get_load_stats
+sg_get_swap_stats = get_swap_stats
+sg_get_fs_stats = get_fs_stats
+sg_get_disk_io_stats = get_disk_io_stats
+sg_get_disk_io_stats_diff = get_disk_io_stats_diff
+sg_get_network_io_stats = get_network_io_stats
+sg_get_network_io_stats_diff = get_network_io_stats_diff
+sg_get_network_iface_stats = get_network_iface_stats
+sg_get_page_stats = get_page_stats
+sg_get_page_stats_diff = get_page_stats_diff
+sg_get_process_stats = get_process_stats
+sg_get_process_count = get_process_count
+
+# User stats used to be a single result rather than a list.
+def sg_get_user_stats():
+    cdef size_t n
+    cdef const sg.sg_user_stats *s = sg.sg_get_user_stats(&n)
+    _not_null(s)
+    return Result({
+        'name_list': " ".join([s[i].login_name for i in range(n)]),
+        'num_entries': n,
+        })
