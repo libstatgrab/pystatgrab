@@ -22,6 +22,7 @@
 #
 """Python bindings for libstatgrab."""
 
+from Cython.Distutils import build_ext
 from distutils.core import setup, Extension
 from subprocess import check_call, check_output, CalledProcessError
 
@@ -57,17 +58,6 @@ def pkg_config(*args):
 if pkg_config("--atleast-version", LIBSTATGRAB, "libstatgrab") is None:
     die("libstatgrab version ", LIBSTATGRAB, " or better is not installed (according to pkg-config)")
 
-# test for _statgrab.c, and try to generate if not found
-if not os.path.exists("_statgrab.c"):
-    warn("_statgrab.c doesn't exist, trying to use pyrexc to generate it...")
-    prog = os.environ.get("PYREXC", "pyrexc")
-    try:
-        check_call([prog, "_statgrab.pyx"])
-    except OSError:
-        die("_statgrab.c not present, and could not run ", prog)
-    except CalledProcessError:
-        die(prog, " failed to generate _statgrab.c")
-
 # get cflags and libs for libstatgrab
 cflags = pkg_config("--cflags", "libstatgrab")
 libs = pkg_config("--libs", "libstatgrab")
@@ -80,11 +70,12 @@ setup(name = "pystatgrab",
     author_email = "support@i-scream.org",
     url = "http://www.i-scream.org/pystatgrab/",
     license = "GNU GPL v2 or later",
-    ext_modules=[Extension(
+    cmdclass = {"build_ext": build_ext},
+    ext_modules = [Extension(
         "_statgrab",
-        ["_statgrab.c"],
+        ["_statgrab.pyx"],
         extra_compile_args = cflags.split(),
         extra_link_args = libs.split(),
     )],
-    py_modules=["statgrab"],
+    py_modules = ["statgrab"],
 )
