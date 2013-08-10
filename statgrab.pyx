@@ -527,11 +527,11 @@ def sg_drop_privileges():
 def sg_get_error():
     return sg.sg_get_error()
 def sg_get_error_arg():
-    return sg_get_error_arg()
+    return sg.sg_get_error_arg()
 def sg_get_error_errno():
-    return sg_get_error_errno()
+    return sg.sg_get_error_errno()
 def sg_str_error(code):
-    return sg_str_error(code)
+    return sg.sg_str_error(code)
 
 # Some functions work the same way, just with a different name.
 sg_get_host_info = get_host_info
