@@ -265,8 +265,6 @@ def get_swap_stats():
 def get_valid_filesystems():
     cdef size_t n
     cdef const char **s = sg.sg_get_valid_filesystems(&n)
-    if s == NULL:
-        print "argh"
     _not_null(s)
     return [s[i] for i in range(n)]
 
