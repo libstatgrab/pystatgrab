@@ -1,10 +1,9 @@
 include AUTHORS
-include README
-include NEWS
 include COPYING
 include ChangeLog
 include MANIFEST.in
-include _statgrab.c
-include _statgrab.pyx
-include statgrab.py
-
+include NEWS
+include README
+include libstatgrab.pxd
+include statgrab.c
+include statgrab.pyx
