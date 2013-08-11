@@ -52,6 +52,18 @@ cdef int _not_null(const void *value) except -1:
         raise StatgrabError()
     return 0
 
+cdef int _vector_not_null(const void *value, size_t entries) except -1:
+    """Check the return value from a vector-returning function.
+    Raise StatgrabError if:
+    - entries > 0 and value is NULL, or
+    - entries == 0 and sg_get_error indicates an error has occurred."""
+    # FIXME: this is an API oddity; libstatgrab issue #17 discusses it
+    if entries > 0 and value == NULL:
+        raise StatgrabError()
+    elif entries == 0 and sg.sg_get_error() != sg.SG_ERROR_NONE:
+        raise StatgrabError()
+    return 0
+
 class Result(dict):
     def __init__(self, attrs):
         super(Result, self).__init__(attrs)
@@ -249,7 +261,7 @@ cdef _make_user_stats(const sg.sg_user_stats *s):
 def get_user_stats():
     cdef size_t n
     cdef const sg.sg_user_stats *s = sg.sg_get_user_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_user_stats(&s[i]) for i in range(n)]
 
 def get_swap_stats():
@@ -265,7 +277,7 @@ def get_swap_stats():
 def get_valid_filesystems():
     cdef size_t n
     cdef const char **s = sg.sg_get_valid_filesystems(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [s[i] for i in range(n)]
 
 def set_valid_filesystems(valid_fs):
@@ -306,13 +318,13 @@ cdef _make_fs_stats(const sg.sg_fs_stats *s):
 def get_fs_stats():
     cdef size_t n
     cdef const sg.sg_fs_stats *s = sg.sg_get_fs_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_fs_stats(&s[i]) for i in range(n)]
 
 def get_fs_stats_diff():
     cdef size_t n
     cdef const sg.sg_fs_stats *s = sg.sg_get_fs_stats_diff(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_fs_stats(&s[i]) for i in range(n)]
 
 cdef _make_disk_io_stats(const sg.sg_disk_io_stats *s):
@@ -326,13 +338,13 @@ cdef _make_disk_io_stats(const sg.sg_disk_io_stats *s):
 def get_disk_io_stats():
     cdef size_t n
     cdef const sg.sg_disk_io_stats *s = sg.sg_get_disk_io_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_disk_io_stats(&s[i]) for i in range(n)]
 
 def get_disk_io_stats_diff():
     cdef size_t n
     cdef const sg.sg_disk_io_stats *s = sg.sg_get_disk_io_stats_diff(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_disk_io_stats(&s[i]) for i in range(n)]
 
 cdef _make_network_io_stats(const sg.sg_network_io_stats *s):
@@ -351,13 +363,13 @@ cdef _make_network_io_stats(const sg.sg_network_io_stats *s):
 def get_network_io_stats():
     cdef size_t n
     cdef const sg.sg_network_io_stats *s = sg.sg_get_network_io_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_network_io_stats(&s[i]) for i in range(n)]
 
 def get_network_io_stats_diff():
     cdef size_t n
     cdef const sg.sg_network_io_stats *s = sg.sg_get_network_io_stats_diff(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_network_io_stats(&s[i]) for i in range(n)]
 
 cdef _make_network_iface_stats(const sg.sg_network_iface_stats *s):
@@ -373,7 +385,7 @@ cdef _make_network_iface_stats(const sg.sg_network_iface_stats *s):
 def get_network_iface_stats():
     cdef size_t n
     cdef const sg.sg_network_iface_stats *s = sg.sg_get_network_iface_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_network_iface_stats(&s[i]) for i in range(n)]
 
 cdef _make_page_stats(const sg.sg_page_stats *s):
@@ -421,7 +433,7 @@ cdef _make_process_stats(const sg.sg_process_stats *s):
 def get_process_stats():
     cdef size_t n
     cdef const sg.sg_process_stats *s = sg.sg_get_process_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return [_make_process_stats(&s[i]) for i in range(n)]
 
 def get_process_count(pcs=entire_process_count):
@@ -554,7 +566,7 @@ sg_get_process_count = get_process_count
 def sg_get_user_stats():
     cdef size_t n
     cdef const sg.sg_user_stats *s = sg.sg_get_user_stats(&n)
-    _not_null(s)
+    _vector_not_null(s, n)
     return Result({
         'name_list': " ".join([s[i].login_name for i in range(n)]),
         'num_entries': n,
