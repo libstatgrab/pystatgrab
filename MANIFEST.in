@@ -7,3 +7,4 @@ include README
 include libstatgrab.pxd
 include statgrab.c
 include statgrab.pyx
+include test.py
