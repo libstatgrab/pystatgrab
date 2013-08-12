@@ -70,7 +70,7 @@ setup(name = "pystatgrab",
     author = "i-scream",
     author_email = "support@i-scream.org",
     url = "http://www.i-scream.org/pystatgrab/",
-    license = "GNU GPL v2 or later",
+    license = "GNU LGPL v2 or later",
     cmdclass = {"build_ext": build_ext},
     ext_modules = [Extension(
         "statgrab",
