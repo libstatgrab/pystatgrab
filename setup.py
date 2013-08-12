@@ -23,7 +23,6 @@
 #
 """Python bindings for libstatgrab."""
 
-from Cython.Distutils import build_ext
 from distutils.core import setup, Extension
 from subprocess import check_call, check_output, CalledProcessError
 
@@ -63,6 +62,15 @@ if pkg_config("--atleast-version", LIBSTATGRAB, "libstatgrab") is None:
 cflags = pkg_config("--cflags", "libstatgrab")
 libs = pkg_config("--libs", "libstatgrab")
 
+try:
+    import Cython.Distutils
+    cmdclass = {"build_ext": Cython.Distutils.build_ext}
+    statgrab_src = ["statgrab.pyx"]
+except ImportError:
+    # Cython is not installed; use the shipped copy of statgrab.c.
+    cmdclass = {}
+    statgrab_src = ["statgrab.c"]
+
 # setup information
 setup(name = "pystatgrab",
     version = VERSION,
@@ -70,10 +78,10 @@ setup(name = "pystatgrab",
     author = "i-scream",
     url = "http://www.i-scream.org/pystatgrab/",
     license = "GNU LGPL v2 or later",
-    cmdclass = {"build_ext": build_ext},
+    cmdclass = cmdclass,
     ext_modules = [Extension(
         "statgrab",
-        ["statgrab.pyx"],
+        statgrab_src,
         extra_compile_args = cflags.split(),
         extra_link_args = libs.split(),
     )],
