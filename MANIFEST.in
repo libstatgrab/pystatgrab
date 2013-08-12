@@ -1,5 +1,5 @@
 include AUTHORS
-include COPYING
+include COPYING.LGPL
 include ChangeLog
 include MANIFEST.in
 include NEWS
