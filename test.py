@@ -233,8 +233,6 @@ class TestPre0_90(unittest.TestCase):
         users = statgrab.sg_get_user_stats()
         self.assertTrue(isinstance(users, statgrab.Result))
         self.assertTrue(isinstance(users.name_list, str))
-        if users.name_list != "":
-            self.assertTrue(" " in users.name_list)
 
 if __name__ == '__main__':
     unittest.main()
