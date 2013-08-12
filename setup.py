@@ -78,6 +78,12 @@ setup(name = "pystatgrab",
     author = "i-scream",
     url = "http://www.i-scream.org/pystatgrab/",
     license = "GNU LGPL v2 or later",
+    classifiers = [
+        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+        "Topic :: System :: Monitoring",
+    ],
     cmdclass = cmdclass,
     ext_modules = [Extension(
         "statgrab",
