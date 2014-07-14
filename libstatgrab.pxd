@@ -226,6 +226,7 @@ cdef extern from "statgrab.h":
 
     ctypedef struct sg_fs_stats:
         char *device_name
+        char *device_canonical
         char *fs_type
         char *mnt_point
         sg_fs_device_type device_type

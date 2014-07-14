@@ -296,6 +296,7 @@ def set_valid_filesystems(valid_fs):
 cdef _make_fs_stats(const sg.sg_fs_stats *s):
     return Result({
         'device_name': s.device_name,
+        'device_canonical': s.device_canonical,
         'fs_type': s.fs_type,
         'mnt_point': s.mnt_point,
         'device_type': s.device_type,
