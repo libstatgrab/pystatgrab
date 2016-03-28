@@ -89,6 +89,6 @@ setup(name = "pystatgrab",
         "statgrab",
         statgrab_src,
         extra_compile_args = cflags.split(),
-        extra_link_args = libs.split(),
+        extra_link_args = libs.decode("utf-8").split(),
     )],
 )
