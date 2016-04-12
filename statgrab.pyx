@@ -22,6 +22,7 @@
 #
 
 from libc.stdlib cimport malloc, free
+from sys import version_info
 
 cimport libstatgrab as sg
 
@@ -77,6 +78,18 @@ class Result(dict):
             return self.__getitem__(item)
         except KeyError:
             raise AttributeError(item)
+
+def _str_to_bytes(s):
+    if version_info[0] >= 3 and isinstance(s, str):
+        return bytes(s, 'utf-8')
+    else:
+        return s
+
+def _bytes_to_str(b):
+    if version_info[0] >= 3 and isinstance(b, bytes):
+        return str(b, 'utf-8')
+    else:
+        return b
 
 # libstatgrab constants exported
 
@@ -279,7 +292,7 @@ def get_valid_filesystems():
     cdef size_t n
     cdef const char **s = sg.sg_get_valid_filesystems(&n)
     _vector_not_null(s, n)
-    return [s[i] for i in range(n)]
+    return [_bytes_to_str(s[i]) for i in range(n)]
 
 def set_valid_filesystems(valid_fs):
     cdef int num_fs = len(valid_fs)
@@ -287,6 +300,7 @@ def set_valid_filesystems(valid_fs):
     vs = <const char **>malloc((num_fs + 1) * sizeof(const char *))
     if vs == NULL:
         raise MemoryError("malloc failed")
+    valid_fs = [_str_to_bytes(x) for x in valid_fs]
     for i in range(num_fs):
         vs[i] = valid_fs[i]
     vs[num_fs] = NULL
@@ -543,7 +557,7 @@ def sg_get_error_arg():
 def sg_get_error_errno():
     return sg.sg_get_error_errno()
 def sg_str_error(code):
-    return sg.sg_str_error(code)
+    return _bytes_to_str(sg.sg_str_error(code))
 
 # Some functions work the same way, just with a different name.
 sg_get_host_info = get_host_info
@@ -570,6 +584,6 @@ def sg_get_user_stats():
     cdef const sg.sg_user_stats *s = sg.sg_get_user_stats(&n)
     _vector_not_null(s, n)
     return Result({
-        'name_list': " ".join([s[i].login_name for i in range(n)]),
+        'name_list': " ".join([_bytes_to_str(s[i].login_name) for i in range(n)]),
         'num_entries': n,
         })

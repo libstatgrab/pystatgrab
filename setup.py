@@ -88,7 +88,7 @@ setup(name = "pystatgrab",
     ext_modules = [Extension(
         "statgrab",
         statgrab_src,
-        extra_compile_args = cflags.split(),
-        extra_link_args = libs.decode("utf-8").split(),
+        extra_compile_args = cflags.decode('utf-8').split(),
+        extra_link_args = libs.decode('utf-8').split(),
     )],
 )
