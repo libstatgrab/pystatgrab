@@ -1,0 +1,285 @@
+stages:
+  - build
+  - test
+
+## Code analysis
+
+sast:
+  image: docker:stable
+  variables:
+    DOCKER_DRIVER: overlay2
+  allow_failure: true
+  services:
+    - docker:stable-dind
+  script:
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
+        --env SAST_CONFIDENCE_LEVEL="${SAST_CONFIDENCE_LEVEL:-3}"
+        --volume "$PWD:/code"
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        "registry.gitlab.com/gitlab-org/security-products/sast:$SP_VERSION" /app/bin/run /code
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+
+code_quality:
+  image: docker:stable
+  variables:
+    DOCKER_DRIVER: overlay2
+  allow_failure: true
+  services:
+    - docker:stable-dind
+  script:
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
+        --env SOURCE_CODE="$PWD"
+        --volume "$PWD":/code
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+
+## Build pystatgrab distfile as it would be distributed to users
+## And build a copy of the git master of libstatgrab for each OS
+
+pystatgrab-distfile:
+  stage: build
+  image: ubuntu:18.04
+  script:
+    - apt-get update
+    - apt-get -y install python-dev pkg-config libstatgrab-dev cython
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py check -s
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py sdist
+  artifacts:
+    paths:
+    - dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    expire_in: 1 week
+
+libstatgrab-ubuntu1604:
+  stage: build
+  image: ubuntu:16.04
+  script:
+    - apt-get update
+    - apt-get -y install autoconf automake libtool pkg-config git build-essential
+    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - cd libstatgrab-master
+    - ./autogen.sh
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1604
+    - make
+    - make install
+  artifacts:
+    paths:
+    - libstatgrab-ubuntu1604
+    expire_in: 1 week
+
+libstatgrab-ubuntu1804:
+  stage: build
+  image: ubuntu:18.04
+  script:
+    - apt-get update
+    - apt-get -y install autoconf automake libtool pkg-config git build-essential
+    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - cd libstatgrab-master
+    - ./autogen.sh
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1804
+    - make
+    - make install
+  artifacts:
+    paths:
+    - libstatgrab-ubuntu1804
+    expire_in: 1 week
+
+libstatgrab-centos7:
+  stage: build
+  image: centos:7
+  script:
+    - yum -y install autoconf automake libtool make pkgconfig git gcc
+    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - cd libstatgrab-master
+    - ./autogen.sh
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-centos7
+    - make
+    - make install
+  artifacts:
+    paths:
+    - libstatgrab-centos7
+    expire_in: 1 week
+
+## Build various combinations of pystatgrab using different Ubuntu and CentOS
+## versions, different python versions, and both the OS distributed libstatgrab
+## and the one we built earlier from the git repository.
+
+ubuntu1604-python2-libstatgrab-distrib:
+  stage: test
+  image: ubuntu:16.04
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - apt-get update
+    - apt-get -y install python-dev pkg-config libstatgrab-dev
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py install
+    - python2 -m unittest discover -v
+
+ubuntu1604-python2-libstatgrab-devel:
+  stage: test
+  image: ubuntu:16.04
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-ubuntu1604
+  script:
+    - apt-get update
+    - apt-get -y install python-dev pkg-config
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1604/lib/pkgconfig python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1604/lib/pkgconfig python2 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-ubuntu1604/lib python2 -m unittest discover -v
+
+ubuntu1604-python3-libstatgrab-distrib:
+  stage: test
+  image: ubuntu:16.04
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - apt-get update
+    - apt-get -y install python3-dev pkg-config libstatgrab-dev
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python3 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python3 setup.py install
+    - python3 -m unittest discover -v
+
+ubuntu1604-python3-libstatgrab-devel:
+  stage: test
+  image: ubuntu:16.04
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-ubuntu1604
+  script:
+    - apt-get update
+    - apt-get -y install python3-dev pkg-config
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1604/lib/pkgconfig python3 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1604/lib/pkgconfig python3 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-ubuntu1604/lib python3 -m unittest discover -v
+
+ubuntu1804-python2-libstatgrab-distrib:
+  stage: test
+  image: ubuntu:18.04
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - apt-get update
+    - apt-get -y install python-dev pkg-config libstatgrab-dev
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py install
+    - python2 -m unittest discover -v
+
+ubuntu1804-python2-libstatgrab-devel:
+  stage: test
+  image: ubuntu:18.04
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-ubuntu1804
+  script:
+    - apt-get update
+    - apt-get -y install python-dev pkg-config
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1804/lib/pkgconfig python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1804/lib/pkgconfig python2 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-ubuntu1804/lib python2 -m unittest discover -v
+
+ubuntu1804-python3-libstatgrab-distrib:
+  stage: test
+  image: ubuntu:18.04
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - apt-get update
+    - apt-get -y install python3-dev pkg-config libstatgrab-dev
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python3 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python3 setup.py install
+    - python3 -m unittest discover -v
+
+ubuntu1804-python3-libstatgrab-devel:
+  stage: test
+  image: ubuntu:18.04
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-ubuntu1804
+  script:
+    - apt-get update
+    - apt-get -y install python3-dev pkg-config
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1804/lib/pkgconfig python3 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-ubuntu1804/lib/pkgconfig python3 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-ubuntu1804/lib python3 -m unittest discover -v
+
+centos7-python2-libstatgrab-distrib:
+  stage: test
+  image: centos:7
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    - yum -y install gcc python-devel pkgconfig libstatgrab-devel
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python2 setup.py install
+    - python2 -m unittest discover -v
+
+centos7-python2-libstatgrab-devel:
+  stage: test
+  image: centos:7
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-centos7
+  script:
+    - yum -y install gcc python-devel pkgconfig
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-centos7/lib/pkgconfig python2 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-centos7/lib/pkgconfig python2 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-centos7/lib python2 -m unittest discover -v
+
+centos7-python36-libstatgrab-distrib:
+  stage: test
+  image: centos:7
+  dependencies:
+    - pystatgrab-distfile
+  script:
+    - yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    - yum -y install gcc python36-devel pkgconfig libstatgrab-devel
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python36 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA python36 setup.py install
+    - python36 -m unittest discover -v
+
+centos7-python36-libstatgrab-devel:
+  stage: test
+  image: centos:7
+  dependencies:
+    - pystatgrab-distfile
+    - libstatgrab-centos7
+  script:
+    - yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    - yum -y install gcc python36-devel pkgconfig
+    - tar -zxvf dist/pystatgrab-$CI_COMMIT_SHORT_SHA.tar.gz
+    - cd pystatgrab-$CI_COMMIT_SHORT_SHA
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-centos7/lib/pkgconfig python36 setup.py build
+    - PYSTATGRAB_VERSION=$CI_COMMIT_SHORT_SHA PKG_CONFIG_PATH=../libstatgrab-centos7/lib/pkgconfig python36 setup.py install
+    - LD_LIBRARY_PATH=../libstatgrab-centos7/lib python36 -m unittest discover -v

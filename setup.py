@@ -73,9 +73,10 @@ except ImportError:
 
 # setup information
 setup(name = "pystatgrab",
-    version = VERSION,
+    version = os.getenv("PYSTATGRAB_VERSION", VERSION),
     description = "Python bindings for libstatgrab",
     author = "i-scream",
+    author_email = "dev@i-scream.org",
     url = "http://www.i-scream.org/pystatgrab/",
     license = "GNU LGPL v2 or later",
     classifiers = [
