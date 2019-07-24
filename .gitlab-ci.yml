@@ -4,41 +4,9 @@ stages:
 
 ## Code analysis
 
-sast:
-  image: docker:stable
-  variables:
-    DOCKER_DRIVER: overlay2
-  allow_failure: true
-  services:
-    - docker:stable-dind
-  script:
-    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
-    - docker run
-        --env SAST_CONFIDENCE_LEVEL="${SAST_CONFIDENCE_LEVEL:-3}"
-        --volume "$PWD:/code"
-        --volume /var/run/docker.sock:/var/run/docker.sock
-        "registry.gitlab.com/gitlab-org/security-products/sast:$SP_VERSION" /app/bin/run /code
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
-
-code_quality:
-  image: docker:stable
-  variables:
-    DOCKER_DRIVER: overlay2
-  allow_failure: true
-  services:
-    - docker:stable-dind
-  script:
-    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
-    - docker run
-        --env SOURCE_CODE="$PWD"
-        --volume "$PWD":/code
-        --volume /var/run/docker.sock:/var/run/docker.sock
-        "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
-  artifacts:
-    reports:
-      codequality: gl-code-quality-report.json
+include:
+  - template: SAST.gitlab-ci.yml
+  - template: Code-Quality.gitlab-ci.yml
 
 ## Build pystatgrab distfile as it would be distributed to users
 ## And build a copy of the git master of libstatgrab for each OS
@@ -63,10 +31,10 @@ libstatgrab-ubuntu1604:
   script:
     - apt-get update
     - apt-get -y install autoconf automake libtool pkg-config git build-essential
-    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - git clone https://github.com/libstatgrab/libstatgrab.git libstatgrab-master
     - cd libstatgrab-master
     - ./autogen.sh
-    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1604
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1604 --disable-man
     - make
     - make install
   artifacts:
@@ -80,10 +48,10 @@ libstatgrab-ubuntu1804:
   script:
     - apt-get update
     - apt-get -y install autoconf automake libtool pkg-config git build-essential
-    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - git clone https://github.com/libstatgrab/libstatgrab.git libstatgrab-master
     - cd libstatgrab-master
     - ./autogen.sh
-    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1804
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-ubuntu1804 --disable-man
     - make
     - make install
   artifacts:
@@ -96,10 +64,10 @@ libstatgrab-centos7:
   image: centos:7
   script:
     - yum -y install autoconf automake libtool make pkgconfig git gcc
-    - git clone https://git.i-scream.org/libstatgrab.git libstatgrab-master
+    - git clone https://github.com/libstatgrab/libstatgrab.git libstatgrab-master
     - cd libstatgrab-master
     - ./autogen.sh
-    - ./configure --prefix=`cd .. && pwd`/libstatgrab-centos7
+    - ./configure --prefix=`cd .. && pwd`/libstatgrab-centos7 --disable-man
     - make
     - make install
   artifacts:
