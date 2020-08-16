@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 #
 # Test suite for pystatgrab
-# http://www.i-scream.org/pystatgrab/
-# Copyright (C) 2013 i-scream
+# https://libstatgrab.org/pystatgrab/
+# Copyright (C) 2004-2019 Tim Bishop
+# Copyright (C) 2005-2013 Adam Sampson
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public

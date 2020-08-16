@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 #
-# i-scream pystatgrab
-# http://www.i-scream.org/pystatgrab/
-# Copyright (C) 2000-2013 i-scream
+# pystatgrab
+# https://libstatgrab.org/pystatgrab/
+# Copyright (C) 2004-2019 Tim Bishop
+# Copyright (C) 2005-2013 Adam Sampson
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -75,9 +76,9 @@ except ImportError:
 setup(name = "pystatgrab",
     version = os.getenv("PYSTATGRAB_VERSION", VERSION),
     description = "Python bindings for libstatgrab",
-    author = "i-scream",
-    author_email = "dev@i-scream.org",
-    url = "http://www.i-scream.org/pystatgrab/",
+    maintainer = "Tim Bishop",
+    maintainer_email = "tim@bishnet.net",
+    url = "https://libstatgrab.org/pystatgrab/",
     license = "GNU LGPL v2 or later",
     classifiers = [
         "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",

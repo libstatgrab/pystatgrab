@@ -1,5 +1,5 @@
 pystatgrab README
-http://www.i-scream.org/pystatgrab/
+https://libstatgrab.org/pystatgrab/
 
 pystatgrab contains python bindings for libstatgrab. For information
 on libstatgrab see the libstatgrab website given above.
@@ -22,7 +22,6 @@ contained within an array if more than one item is being returned.
 These map pretty much directly on to the C structures returned by
 libstatgrab.
 
-If you have any problems or find a bug, please let us know. We have
-information on how to do that on our website:
+If you have any problems or find a bug, please let us know.
 
-http://www.i-scream.org/support.xhtml
+https://libstatgrab.org/pystatgrab/issues
