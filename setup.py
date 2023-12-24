@@ -24,7 +24,10 @@
 #
 """Python bindings for libstatgrab."""
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 from subprocess import check_call, check_output, CalledProcessError
 
 import sys
