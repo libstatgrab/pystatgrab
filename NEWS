@@ -1,6 +1,10 @@
 pystatgrab NEWS
 https://libstatgrab.org/pystatgrab/
 
+pystatgrab 0.7.2 (24 Decemberr 2023)
+
+ * Re-generate with more recent Cython. Fixes build on Python 3.11.
+
 pystatgrab 0.7.1 (16 August 2020)
 
  * Re-generate with more recent Cython. Fixes build on Python 3.7.
