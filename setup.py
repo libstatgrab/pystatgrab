@@ -68,12 +68,26 @@ libs = pkg_config("--libs", "libstatgrab")
 
 try:
     import Cython.Distutils
+    from Cython.Build import cythonize
     cmdclass = {"build_ext": Cython.Distutils.build_ext}
-    statgrab_src = ["statgrab.pyx"]
+    ext_modules = cythonize(
+        [Extension(
+                "statgrab",
+                ["statgrab.pyx"],
+                extra_compile_args = cflags.decode("utf-8").split(),
+                extra_link_args = libs.decode("utf-8").split(),
+        )],
+        language_level="3str",
+    )
 except ImportError:
     # Cython is not installed; use the shipped copy of statgrab.c.
     cmdclass = {}
-    statgrab_src = ["statgrab.c"]
+    ext_modules = [Extension(
+        "statgrab",
+        ["statgrab.c"],
+        extra_compile_args = cflags.decode("utf-8").split(),
+        extra_link_args = libs.decode("utf-8").split()
+    )]
 
 # setup information
 setup(name = "pystatgrab",
@@ -90,10 +104,5 @@ setup(name = "pystatgrab",
         "Topic :: System :: Monitoring",
     ],
     cmdclass = cmdclass,
-    ext_modules = [Extension(
-        "statgrab",
-        statgrab_src,
-        extra_compile_args = cflags.decode('utf-8').split(),
-        extra_link_args = libs.decode('utf-8').split(),
-    )],
+    ext_modules = ext_modules,
 )
